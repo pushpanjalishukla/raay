@@ -1,21 +1,10 @@
 import type { NextRequest } from "next/server";
-import { bump } from "@/lib/analyze";
+import { checkAllowance } from "@/lib/entitlements";
 import { aiEnabled, askWithClaude } from "@/lib/claude";
 import { fetchAppCached } from "@/lib/stores";
 import type { Store } from "@/lib/types";
 
 export const maxDuration = 120;
-
-// Per-visitor and global daily limits on questions so the public site can't
-// drain the API budget. Counters live in Vercel Runtime Cache (shared by all instances).
-const PER_HOUR = Number(process.env.RAAY_ASK_PER_IP_PER_HOUR ?? 15);
-const PER_DAY = Number(process.env.RAAY_ASK_DAILY_LIMIT ?? 300);
-async function allow(ip: string): Promise<"ok" | "ip" | "day"> {
-  const hour = Math.floor(Date.now() / 3_600_000);
-  if ((await bump(`ask-ip:${ip}:${hour}`, 3600)) > PER_HOUR) return "ip";
-  if ((await bump(`ask-day:${new Date().toISOString().slice(0, 10)}`, 2 * 86400)) > PER_DAY) return "day";
-  return "ok";
-}
 
 export async function POST(req: NextRequest) {
   if (!aiEnabled()) return Response.json({ error: "Ask Raay needs an Anthropic API key on the server." }, { status: 503 });
@@ -32,12 +21,16 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Ask a question about a specific app." }, { status: 400 });
   }
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
-  const ok = await allow(ip);
-  if (ok !== "ok")
-    return Response.json(
-      { error: ok === "ip" ? "You've hit the question limit for this hour. Try again later." : "Today's free questions are used up. Please come back tomorrow." },
-      { status: 429 },
-    );
+  const allowance = await checkAllowance("question", ip);
+  if (!allowance.ok) {
+    const message = {
+      login: "You've used today's free questions. Sign in to keep asking.",
+      upgrade: "You've used today's free questions. Pick a plan to keep asking.",
+      quota: "You've used this month's questions on your plan. Upgrade to keep asking.",
+      busy: "Today's free questions are used up. Please come back tomorrow.",
+    }[allowance.gate];
+    return Response.json({ error: message, gate: allowance.gate }, { status: 402 });
+  }
   try {
     const { app, reviews } = await fetchAppCached(store, id);
     const result = await askWithClaude(app, reviews, question, history);

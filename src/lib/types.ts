@@ -117,6 +117,8 @@ export interface Analysis {
   aiAvailable?: boolean;
   /** Set when the report was downgraded for one visitor only; never cache it for others. */
   personal?: boolean;
+  /** Why AI was withheld for this visitor: sign in, upgrade, monthly quota used, or site-wide cap. */
+  gate?: "login" | "upgrade" | "quota" | "busy";
   model?: string;
   note?: string;
   summary: string;

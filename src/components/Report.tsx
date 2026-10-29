@@ -10,6 +10,7 @@ import { RatingWaterfallChart } from "./AnalyticsCharts";
 import AnalyticsTab from "./AnalyticsTab";
 import AskRaay from "./AskRaay";
 import ChurnTab from "./ChurnTab";
+import GateCard from "./GateCard";
 import ReviewsTable, { NO_FILTERS, type ReviewFilters } from "./ReviewsTable";
 import { StoreBadge } from "./AppSearch";
 import { BarList, Stat } from "./charts";
@@ -235,6 +236,15 @@ export default function Report({ store, id }: { store: Store; id: string }) {
 
       {data.note && (
         <p className="mt-6 rounded-lg bg-warning-bg text-warning-ink text-sm px-4 py-3">{data.note}</p>
+      )}
+
+      {data.gate && data.gate !== "busy" && (
+        <div className="mt-6 space-y-2">
+          <GateCard gate={data.gate} kind="report" />
+          <p className="text-xs text-ink-3 px-1">
+            Below is the free basic report from Raay&apos;s built-in classifier. AI summaries, Ask Raay and reply drafts need a fresh AI report.
+          </p>
+        </div>
       )}
 
       <div id="tabs" className="mt-6 border-b border-border flex gap-1 scroll-mt-16 overflow-x-auto no-print" role="tablist">

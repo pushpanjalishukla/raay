@@ -86,6 +86,17 @@ Open http://localhost:3000 and search for any app.
 | `RAAY_ASK_PER_IP_PER_HOUR` / `RAAY_ASK_DAILY_LIMIT` | No | Ask Raay question limits (default 15 per visitor per hour, 300 per day) |
 | `RAAY_CACHE_HOURS` | No | How long an AI report is reused (default 12) |
 | `NEXT_PUBLIC_CONTACT_URL` | No | Link for the "Talk to us" buttons (hidden when empty) |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` | For accounts | Sign-in with Clerk. Without them the site runs with no accounts |
+| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | For payments | Razorpay subscriptions (plans are auto-created as "Raay Starter" / "Raay Growth") |
+| `RAZORPAY_WEBHOOK_SECRET` | For payments | Verifies Razorpay webhooks at `/api/billing/webhook` (renewals, cancellations) |
+| `NEXT_PUBLIC_FREE_REPORTS_PER_DAY` / `NEXT_PUBLIC_FREE_QUESTIONS_PER_DAY` | No | Free daily allowance before sign-in / upgrade (default 3 / 5) |
+
+## Free → sign in → subscribe
+
+1. Anyone can view cached reports for free, plus 3 fresh AI reports and 5 Ask Raay questions a day.
+2. Past the free allowance, Raay asks the visitor to **sign in** (Clerk: Google or email).
+3. Signed-in users without a plan see the **plans** and pay with **Razorpay** (UPI, cards, netbanking). The subscription is verified server-side (HMAC signature) and stored on the user's Clerk profile; webhooks keep renewals and cancellations in sync.
+4. Paid plans get monthly quotas (Starter: 150 reports / 1,000 questions; Growth: 600 / 5,000). `/account` shows usage and lets users cancel.
 
 ## Built to handle traffic
 
@@ -104,10 +115,10 @@ Open http://localhost:3000 and search for any app.
 
 ## Roadmap
 
-- [ ] Accounts and saved apps (Supabase)
+- [x] Accounts (Clerk) and Razorpay subscriptions
+- [ ] Saved apps per account
 - [ ] Daily refresh with Vercel Cron, plus a review history database
 - [ ] Slack and email weekly digest, plus spike alerts
-- [ ] Razorpay subscriptions
 - [ ] Public "India App Pulse" monthly report (e.g. quick-commerce complaints by category)
 
 ---

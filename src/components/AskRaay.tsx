@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { Analysis, RawReview } from "@/lib/types";
+import GateCard from "./GateCard";
 
 interface Turn {
   q: string;
@@ -9,6 +10,7 @@ interface Turn {
   quotes?: RawReview[];
   followUps?: string[];
   error?: string;
+  gate?: "login" | "upgrade" | "quota" | "busy";
 }
 
 const STARTERS = [
@@ -65,7 +67,7 @@ export default function AskRaay({ data, disabled }: { data: Analysis; disabled?:
         t.map((x, i) =>
           i === t.length - 1
             ? body.error
-              ? { ...x, error: body.error }
+              ? { ...x, error: body.error, gate: body.gate }
               : { ...x, a: body.answer, quotes: body.quotes, followUps: body.followUps }
             : x,
         ),
@@ -114,7 +116,9 @@ export default function AskRaay({ data, disabled }: { data: Analysis; disabled?:
             <div className="flex justify-end">
               <p className="max-w-[85%] rounded-2xl rounded-br-sm bg-ink text-bg px-4 py-2 text-sm">{t.q}</p>
             </div>
-            {t.error ? (
+            {t.gate && t.gate !== "busy" ? (
+              <GateCard gate={t.gate} kind="question" compact />
+            ) : t.error ? (
               <p className="text-sm text-critical">{t.error}</p>
             ) : t.a ? (
               <div className="space-y-3">

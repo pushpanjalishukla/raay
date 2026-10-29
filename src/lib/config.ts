@@ -12,12 +12,12 @@ export const BRAND = {
 };
 
 export const SAMPLE_APPS = [
-  { store: "play", id: "com.zeptoconsumerapp", name: "Zepto" },
-  { store: "play", id: "com.grofers.customerapp", name: "Blinkit" },
-  { store: "play", id: "in.swiggy.android", name: "Swiggy" },
-  { store: "play", id: "com.phonepe.app", name: "PhonePe" },
-  { store: "play", id: "com.dreamplug.androidapp", name: "CRED" },
-  { store: "play", id: "com.meesho.supply", name: "Meesho" },
+  { store: "play", id: "com.zeptoconsumerapp", name: "Zepto", icon: "https://play-lh.googleusercontent.com/jrtmMFv4qjtgMPQeaQzUFZ3EYBkHd_8OFYl6O1Ngt5Pey52RJAR4u8K4IoPILkJz76a7s5U3DNaY3r3xnl7t8X4" },
+  { store: "play", id: "com.grofers.customerapp", name: "Blinkit", icon: "https://play-lh.googleusercontent.com/dY1ryTjOaVsnslxvNamNvSBulmDUkvW5f5FJ_HDApMfecSOIxjCafpNAv4LTG8TJVyp0XR9tAAaRI4K77Eiqfg" },
+  { store: "play", id: "in.swiggy.android", name: "Swiggy", icon: "https://play-lh.googleusercontent.com/FJ5W5ygiN-DYfpd2-3LqyN5F-OxDtQ7z_9v5nAeD4vOrN8kQitoOwULactKgKvktXowVEM491wE-unmGmnt8OWM" },
+  { store: "play", id: "com.phonepe.app", name: "PhonePe", icon: "https://play-lh.googleusercontent.com/ARGoCZk-5QCKPpyTsGhn1WahhPbVMa95T1U7clwnI8gjtW-YNY96rAANqFkuENbU35IbYF2Gjg2UjZXA495x0A" },
+  { store: "play", id: "net.one97.paytm", name: "Paytm", icon: "https://play-lh.googleusercontent.com/WDGsMRuVENnZPEpV4DEaXw12qtMY3em85xpmZqcXzeh0iT_eXFtAU9VUj-Z7xNQQd5DMqrkKSs9D0qbI1rlt" },
+  { store: "play", id: "com.meesho.supply", name: "Meesho", icon: "https://play-lh.googleusercontent.com/lQrsRJ7PT25f2J8n14Zp4j0695_2NIpIUEQpG6bEuljhk7oJ8q_GeA5iYgWm1DiDq0WFPBWP4iaJcXi4XPwoWCk" },
 ] as const;
 
 export const SAMPLE_COMPARE = "play:com.zeptoconsumerapp,play:com.grofers.customerapp,play:com.bigbasket.mobileapp";

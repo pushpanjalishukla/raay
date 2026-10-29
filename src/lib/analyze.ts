@@ -1,7 +1,8 @@
 import { aiEnabled, insightsWithClaude, labelWithClaude, MODEL } from "./claude";
 import { classify } from "./lexicon";
 import { computeStats, fallbackInsights, fallbackSummary } from "./stats";
-import { getCache } from "@vercel/functions";
+import { sharedCache } from "./counters";
+import { checkAllowance, type Gate } from "./entitlements";
 import { fetchAppCached } from "./stores";
 import type { Analysis, Insight, Store } from "./types";
 
@@ -12,28 +13,7 @@ import type { Analysis, Insight, Store } from "./types";
 const TTL_S = Number(process.env.RAAY_CACHE_HOURS ?? 12) * 3600;
 const memory = new Map<string, { at: number; data: Analysis }>();
 const inflight = new Map<string, Promise<Analysis>>();
-const shared = () => getCache({ namespace: "raay" });
-
-// Budget guards for the public site: per-visitor and global daily caps on fresh
-// AI analyses. Past either cap, visitors get the free built-in classifier.
-const AI_PER_IP_PER_HOUR = Number(process.env.RAAY_AI_PER_IP_PER_HOUR ?? 5);
-const AI_PER_DAY = Number(process.env.RAAY_AI_DAILY_LIMIT ?? 40);
-
-export async function bump(key: string, ttl: number): Promise<number> {
-  // Approximate counter: fine for budget guards, not for billing.
-  const cache = shared();
-  const n = Number((await cache.get(key).catch(() => 0)) ?? 0) + 1;
-  await cache.set(key, n, { ttl, name: "raay-counter" }).catch(() => {});
-  return n;
-}
-
-async function aiBudget(ip: string): Promise<"ok" | "ip" | "day"> {
-  const hour = Math.floor(Date.now() / 3_600_000);
-  const today = new Date().toISOString().slice(0, 10);
-  if ((await bump(`ip:${ip}:${hour}`, 3600)) > AI_PER_IP_PER_HOUR) return "ip";
-  if ((await bump(`day:${today}`, 2 * 86400)) > AI_PER_DAY) return "day";
-  return "ok";
-}
+const shared = sharedCache;
 
 export async function analyze(store: Store, id: string, ip: string): Promise<Analysis> {
   const key = `analysis:v2:${store}:${id}`;
@@ -61,8 +41,9 @@ export async function analyze(store: Store, id: string, ip: string): Promise<Ana
 
 async function run(store: Store, id: string, ip: string): Promise<Analysis> {
   const { app, reviews: raw } = await fetchAppCached(store, id);
-  const budget = aiEnabled() && raw.length > 0 ? await aiBudget(ip) : "off";
-  const useAi = budget === "ok";
+  const allowance = aiEnabled() && raw.length > 0 ? await checkAllowance("report", ip) : null;
+  const gate: Gate | undefined = allowance && !allowance.ok ? allowance.gate : undefined;
+  const useAi = allowance?.ok === true;
 
   if (!useAi) {
     const reviews = raw.map(classify);
@@ -72,13 +53,14 @@ async function run(store: Store, id: string, ip: string): Promise<Analysis> {
       generatedAt: new Date().toISOString(),
       engine: "lexicon",
       aiAvailable: aiEnabled(),
-      personal: budget === "ip",
-      note:
-        budget === "ip"
-          ? "You've reached the free AI limit for this hour, so this report uses Raay's built-in classifier."
-          : budget === "day"
-            ? "Today's free AI reports are used up, so this report uses Raay's built-in classifier. Popular apps stay AI-powered from cache."
-            : "Running on Raay's built-in multilingual classifier. Add an Anthropic API key to unlock AI insights and reply drafts.",
+      // A gated report is specific to this visitor; never share it via caches.
+      personal: Boolean(gate),
+      gate,
+      note: gate
+        ? gate === "busy"
+          ? "Today's free AI reports are used up, so this report uses Raay's built-in classifier. Popular apps stay AI-powered from cache."
+          : undefined
+        : "Running on Raay's built-in multilingual classifier. Add an Anthropic API key to unlock AI insights and reply drafts.",
       summary: fallbackSummary(app, stats),
       insights: fallbackInsights(reviews, stats),
       replies: [],
