@@ -16,7 +16,7 @@ export default function LivePill() {
   return (
     <Link
       href="/pulse"
-      className="inline-flex items-center gap-2.5 rounded-full border border-border bg-surface/80 backdrop-blur pl-2 pr-4 py-1.5 text-sm text-ink-2 hover:border-ink-3 shadow-sm"
+      className="inline-flex items-center gap-2.5 rounded-full border border-border bg-surface pl-2 pr-4 py-1.5 text-sm text-ink-2 hover:border-ink-3 shadow-sm"
     >
       <span className="inline-flex items-center gap-1.5 rounded-full bg-[color-mix(in_oklab,var(--critical)_12%,transparent)] px-2 py-0.5 text-xs font-semibold text-critical">
         <span className="w-1.5 h-1.5 rounded-full bg-critical pulse-dot" />
