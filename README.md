@@ -2,7 +2,7 @@
 
 **App review intelligence for Indian apps.** Raay reads every Google Play and App Store review of your app and your competitors' (in English, Hinglish, Hindi, Tamil, Marathi and more) and turns them into the problems your team should fix this week. It flags bad releases and drafts replies in each user's own language.
 
-**Live demo:** _coming with the first deploy_
+**Live demo:** https://raay-chi.vercel.app · try [Zepto](https://raay-chi.vercel.app/app/play/com.zeptoconsumerapp) or [Zepto vs Blinkit vs BigBasket](https://raay-chi.vercel.app/compare?apps=play:com.zeptoconsumerapp,play:com.grofers.customerapp,play:com.bigbasket.mobileapp)
 
 ## Why it exists
 
