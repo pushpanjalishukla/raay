@@ -1,5 +1,6 @@
 // Who may spend AI budget right now: free daily allowance, then sign-in, then a paid plan.
 import { bump, sharedCache } from "./counters";
+import { localBump } from "./visitor";
 import { activePlan, authEnabled, getPlanState, getUserId } from "./auth";
 import { FREE_LIMITS, PLANS, type PlanKey } from "./plans";
 
@@ -29,9 +30,12 @@ export async function checkAllowance(kind: Kind, ip: string): Promise<Allowance>
 
   // Free usage is counted per IP (and per account when signed in), so signing
   // in alone doesn't reset the allowance; it leads to the plans.
-  const blocked = (await bump(`free-ip:${ip}:${kind}:${day()}`, 2 * 86400)) > FREE_LIMITS[kind];
+  const ipKey = `free-ip:${ip}:${kind}:${day()}`;
+  const blocked = localBump(ipKey) > FREE_LIMITS[kind] || (await bump(ipKey, 2 * 86400)) > FREE_LIMITS[kind];
   const blockedUser = userId ? (await bump(`free-user:${userId}:${kind}:${day()}`, 2 * 86400)) > FREE_LIMITS[kind] : false;
-  const globalBlocked = (await bump(`free-all:${kind}:${day()}`, 2 * 86400)) > GLOBAL_FREE_PER_DAY[kind];
+  const globalKey = `free-all:${kind}:${day()}`;
+  const globalBlocked =
+    localBump(globalKey) > GLOBAL_FREE_PER_DAY[kind] || (await bump(globalKey, 2 * 86400)) > GLOBAL_FREE_PER_DAY[kind];
   if (!blocked && !blockedUser && !globalBlocked) return { ok: true, plan: null };
   if (!authEnabled()) return { ok: false, gate: "busy" };
   return { ok: false, gate: userId ? "upgrade" : "login" };

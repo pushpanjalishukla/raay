@@ -7,8 +7,13 @@ import { ipAddress } from "@vercel/functions";
 import { bump, sharedCache } from "./counters";
 
 async function dailySecret(): Promise<string> {
-  if (process.env.RAAY_HASH_SALT) return `${process.env.RAAY_HASH_SALT}:${new Date().toISOString().slice(0, 10)}`;
-  const key = `salt:${new Date().toISOString().slice(0, 10)}`;
+  const day = new Date().toISOString().slice(0, 10);
+  // Derive the daily secret from a server-only secret so it survives cache evictions
+  // (if it changed per request, every visitor would look new and limits would stop working).
+  const base = process.env.RAAY_HASH_SALT || process.env.ANTHROPIC_API_KEY || process.env.CLERK_SECRET_KEY;
+  if (base) return createHmac("sha256", base).update(`raay-visitor:${day}`).digest("hex");
+  // Local development without secrets: a random per-day secret kept in cache.
+  const key = `salt:${day}`;
   const cache = sharedCache();
   const existing = (await cache.get(key).catch(() => null)) as string | null;
   if (existing) return existing;
@@ -22,10 +27,36 @@ export async function visitorId(req: Request): Promise<string> {
   return createHmac("sha256", await dailySecret()).update(ip).digest("hex").slice(0, 32);
 }
 
+// In-memory counters are atomic within one server instance (single-threaded JS);
+// they backstop the shared, approximate counters against bursts of parallel requests.
+const local = new Map<string, number>();
+export function localBump(key: string): number {
+  const n = (local.get(key) ?? 0) + 1;
+  local.set(key, n);
+  if (local.size > 5000) local.clear();
+  return n;
+}
+
+/** Limits how many expensive jobs run at once in this instance. */
+const running = new Map<string, number>();
+export function tryAcquire(name: string, max: number): (() => void) | null {
+  const n = running.get(name) ?? 0;
+  if (n >= max) return null;
+  running.set(name, n + 1);
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    running.set(name, Math.max(0, (running.get(name) ?? 1) - 1));
+  };
+}
+
 /** Fixed-window rate limit. Returns true when the caller is over the limit. */
 export async function overLimit(name: string, who: string, max: number, windowSeconds: number): Promise<boolean> {
   const bucket = Math.floor(Date.now() / 1000 / windowSeconds);
-  return (await bump(`rl:${name}:${who}:${bucket}`, windowSeconds)) > max;
+  const key = `rl:${name}:${who}:${bucket}`;
+  if (localBump(key) > max) return true;
+  return (await bump(key, windowSeconds)) > max;
 }
 
 /** Strict app id formats: Play package names, numeric App Store ids. */

@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { checkAllowance } from "@/lib/entitlements";
 import { aiEnabled, askWithClaude } from "@/lib/claude";
 import { fetchAppCached } from "@/lib/stores";
-import { validAppRef, visitorId } from "@/lib/visitor";
+import { overLimit, tooMany, tryAcquire, validAppRef, visitorId } from "@/lib/visitor";
 
 export const maxDuration = 120;
 
@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Ask a question about a specific app." }, { status: 400 });
   }
   const ip = await visitorId(req);
+  if (await overLimit("ask", ip, 20, 600)) return tooMany();
   const allowance = await checkAllowance("question", ip);
   if (!allowance.ok) {
     const message = {
@@ -31,12 +32,16 @@ export async function POST(req: NextRequest) {
     }[allowance.gate];
     return Response.json({ error: message, gate: allowance.gate }, { status: 402 });
   }
+  const release = tryAcquire("ask", Number(process.env.RAAY_MAX_CONCURRENT_ASK ?? 6));
+  if (!release) return Response.json({ error: "Raay is busy answering other questions. Please try again in a moment." }, { status: 503 });
   try {
     const { app, reviews } = await fetchAppCached(store, id);
     const result = await askWithClaude(app, reviews, question, history);
-    return Response.json(result);
+    return Response.json(result, { headers: { "Cache-Control": "private, no-store" } });
   } catch (err) {
     console.error("[raay] ask failed:", err);
     return Response.json({ error: "Couldn't answer that right now. Please try again." }, { status: 502 });
+  } finally {
+    release();
   }
 }

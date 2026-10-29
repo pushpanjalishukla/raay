@@ -3,6 +3,7 @@ import { classify } from "./lexicon";
 import { computeStats, fallbackInsights, fallbackSummary } from "./stats";
 import { sharedCache } from "./counters";
 import { checkAllowance, type Gate } from "./entitlements";
+import { tryAcquire } from "./visitor";
 import { fetchAppCached } from "./stores";
 import type { Analysis, Insight, Store } from "./types";
 
@@ -25,7 +26,11 @@ export async function analyze(store: Store, id: string, ip: string): Promise<Ana
     return fromShared;
   }
   const running = inflight.get(key);
-  if (running) return running;
+  if (running) {
+    const result = await running;
+    // A gated result belongs to the visitor who triggered it; compute our own instead.
+    if (!result.personal) return result;
+  }
 
   const job = run(store, id, ip).finally(() => inflight.delete(key));
   inflight.set(key, job);
@@ -41,9 +46,13 @@ export async function analyze(store: Store, id: string, ip: string): Promise<Ana
 
 async function run(store: Store, id: string, ip: string): Promise<Analysis> {
   const { app, reviews: raw } = await fetchAppCached(store, id);
-  const allowance = aiEnabled() && raw.length > 0 ? await checkAllowance("report", ip) : null;
+  let allowance = aiEnabled() && raw.length > 0 ? await checkAllowance("report", ip) : null;
+  // Cap concurrent AI analyses per instance so a burst can't run up the bill.
+  const release = allowance?.ok ? tryAcquire("ai-report", Number(process.env.RAAY_MAX_CONCURRENT_AI ?? 4)) : null;
+  if (allowance?.ok && !release) allowance = { ok: false, gate: "busy" };
   const gate: Gate | undefined = allowance && !allowance.ok ? allowance.gate : undefined;
   const useAi = allowance?.ok === true;
+  try {
 
   if (!useAi) {
     const reviews = raw.map(classify);
@@ -58,7 +67,7 @@ async function run(store: Store, id: string, ip: string): Promise<Analysis> {
       gate,
       note: gate
         ? gate === "busy"
-          ? "Today's free AI reports are used up, so this report uses Raay's built-in classifier. Popular apps stay AI-powered from cache."
+          ? "AI reports are at capacity right now, so this report uses Raay's built-in classifier. Popular apps stay AI-powered from cache; try again later for a fresh AI report."
           : undefined
         : "Running on Raay's built-in multilingual classifier. Add an Anthropic API key to unlock AI insights and reply drafts.",
       summary: fallbackSummary(app, stats),
@@ -98,4 +107,7 @@ async function run(store: Store, id: string, ip: string): Promise<Analysis> {
     stats,
     reviews,
   };
+  } finally {
+    release?.();
+  }
 }

@@ -22,6 +22,8 @@ export async function GET() {
     data = await building;
   }
   return Response.json(data, {
-    headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" },
+    headers: {
+      "Cache-Control": data.rows.length ? "public, s-maxage=21600, stale-while-revalidate=86400" : "public, s-maxage=60",
+    },
   });
 }

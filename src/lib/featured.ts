@@ -3,6 +3,7 @@
 import { CATEGORY_INFO, LANG_LABEL } from "./categories";
 import { sharedCache } from "./counters";
 import { detectLang } from "./lexicon";
+import { clean } from "./claude";
 import { churnSignals, fixTracker, ratingWaterfall } from "./deep";
 import type { Analysis, LabeledReview } from "./types";
 
@@ -25,7 +26,10 @@ const HINGLISH_HINT = /\b(acha|achha|accha|achcha|hai|he|ke|ka|ki|ko|nahi|nahin|
 // Accusations about the company (fraud, fake, theft) don't belong on a public showcase.
 const ACCUSATION = /\b(fake|fraud|frod|scam|chor|loot|cheat|cheating|thief|dhokha|rewive fake)\b/i;
 
-const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
+const clip = (s: string, n: number) => {
+  const c = clean(s);
+  return c.length > n ? `${c.slice(0, n - 1).trimEnd()}…` : c;
+};
 
 /** Picks a short, readable, multilingual set of reviews that Raay decoded well. */
 function pickReviews(reviews: LabeledReview[]): LabeledReview[] {
@@ -98,7 +102,7 @@ export function buildSnapshot(a: Analysis, name: string): FeaturedSnapshot {
       topic: CATEGORY_INFO[r.category].label,
       positive: r.sentiment === "positive",
     })),
-    fix: top ? { title: top.title, detail: clip(top.detail, 110), action: clip(top.action, 120) } : null,
+    fix: top ? { title: clip(top.title, 90), detail: clip(top.detail, 110), action: clip(top.action, 120) } : null,
     callouts: {
       spike: spike
         ? { title: `Spike in v${spike.version}`, sub: `${Math.round(spike.negShare * 100)}% of its reviews are negative` }

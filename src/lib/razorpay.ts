@@ -100,7 +100,9 @@ function safeEqualHex(a: string, b: string) {
 
 /** Checkout success signature: HMAC-SHA256(payment_id|subscription_id, key_secret). */
 export function verifyCheckout(paymentId: string, subscriptionId: string, signature: string) {
-  const expected = createHmac("sha256", process.env.RAZORPAY_KEY_SECRET ?? "")
+  const secret = process.env.RAZORPAY_KEY_SECRET;
+  if (!secret) return false;
+  const expected = createHmac("sha256", secret)
     .update(`${paymentId}|${subscriptionId}`)
     .digest("hex");
   return safeEqualHex(expected, signature);

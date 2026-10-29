@@ -22,6 +22,18 @@ const MAX_AI_REVIEWS = 200;
 export const aiEnabled = () =>
   Boolean(process.env.ANTHROPIC_API_KEY) && process.env.RAAY_AI_DISABLED !== "1";
 
+/**
+ * Reviews are untrusted input. A crafted review could try to steer the model into
+ * putting a link, email or phone number into a cached insight or reply draft that a
+ * team might copy into a public reply. Strip those from everything the model writes.
+ */
+export function clean(text: string): string {
+  return text
+    .replace(/\b(?:https?:\/\/|www\.)\S+/gi, "[link removed]")
+    .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, "[email removed]")
+    .replace(/\+?\d[\d\s-]{8,}\d/g, (m) => (m.replace(/\D/g, "").length >= 10 ? "[number removed]" : m));
+}
+
 let client: Anthropic | null = null;
 const getClient = () => (client ??= new Anthropic());
 
@@ -110,7 +122,7 @@ async function labelChunk(chunk: RawReview[], offset: number): Promise<LabeledRe
       category: l.category,
       sentiment: l.sentiment,
       lang: l.language,
-      gist: l.gist || undefined,
+      gist: l.gist ? clean(l.gist) : undefined,
       severity: Math.min(3, Math.max(1, l.severity)) as 1 | 2 | 3,
     };
   });
@@ -169,16 +181,16 @@ export async function insightsWithClaude(
   );
   const idOf = (i: number) => sample[i]?.id;
   return {
-    summary: out.summary,
+    summary: clean(out.summary),
     insights: out.insights.map((x) => ({
-      title: x.title,
-      detail: x.detail,
+      title: clean(x.title),
+      detail: clean(x.detail),
       category: x.category,
-      action: x.action,
+      action: clean(x.action),
       quoteIds: x.quote_ids.map(idOf).filter((v): v is string => Boolean(v)),
     })),
     replies: out.replies
-      .map((r) => ({ reviewId: idOf(r.i), reply: r.reply }))
+      .map((r) => ({ reviewId: idOf(r.i), reply: clean(r.reply) }))
       .filter((r): r is ReplyDraft => Boolean(r.reviewId)),
   };
 }
@@ -227,8 +239,8 @@ export async function askWithClaude(
     "low",
   );
   return {
-    answer: out.answer,
+    answer: clean(out.answer),
     quotes: out.quote_ids.map((i) => reviews[i]).filter((r): r is RawReview => Boolean(r)).slice(0, 5),
-    followUps: out.follow_ups.slice(0, 3),
+    followUps: out.follow_ups.slice(0, 3).map(clean),
   };
 }

@@ -184,8 +184,10 @@ export function versionHeat(reviews: LabeledReview[], versions: VersionStat[]) {
 export function toCsv(reviews: LabeledReview[]): string {
   const head = ["date", "rating", "version", "language", "topic", "sentiment", "severity", "thumbs_up", "replied", "text", "english_summary"];
   const esc = (v: unknown) => {
-    const s = String(v ?? "");
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    let s = String(v ?? "");
+    // Stop spreadsheet apps from running review text as a formula (CSV injection).
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const lines = reviews.map((r) =>
     [

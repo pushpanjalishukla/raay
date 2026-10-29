@@ -48,7 +48,8 @@ export default function PrivacyPage() {
         <h2>2. Cookies</h2>
         <p>
           We use only essential cookies: to keep you signed in (Clerk) and to run checkout (Razorpay). We do not use
-          advertising cookies, tracking pixels or third-party analytics.
+          advertising cookies, tracking pixels or third-party analytics. App icons are loaded directly from Google Play
+          and Apple&apos;s image servers, which, like any website image host, receive your IP address when the image loads.
         </p>
       </section>
 
