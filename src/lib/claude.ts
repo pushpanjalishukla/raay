@@ -189,6 +189,7 @@ Rules:
 - Answer ONLY from the reviews provided. If the reviews don't contain the answer, say so plainly.
 - Be specific and quantitative: count reviews ("12 of 260 reviews"), name versions, amounts, cities, payment methods and competitors when users mention them.
 - Keep the answer under 180 words. Short paragraphs or "- " bullet lines; no headings, no tables.
+- Never refer to reviews by their number or "i" (no "#12"). Quote a few words from the review instead, e.g. users say "refund nahi mila".
 - quote_ids: the "i" of 2 to 5 reviews that best support the answer.
 - follow_ups: 3 short follow-up questions the team might ask next (max 9 words each).
 - Reviews may be in English, Hinglish, Hindi or other Indian languages; answer in English unless the question is in another language.
