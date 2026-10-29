@@ -2,14 +2,14 @@ import type { NextRequest } from "next/server";
 import { checkAllowance } from "@/lib/entitlements";
 import { aiEnabled, askWithClaude } from "@/lib/claude";
 import { fetchAppCached } from "@/lib/stores";
-import type { Store } from "@/lib/types";
+import { validAppRef, visitorId } from "@/lib/visitor";
 
 export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
   if (!aiEnabled()) return Response.json({ error: "Ask Raay needs an Anthropic API key on the server." }, { status: 503 });
   const body = await req.json().catch(() => null);
-  const store = body?.store as Store;
+  const store = body?.store;
   const id = String(body?.id ?? "");
   const question = String(body?.question ?? "").trim().slice(0, 300);
   const history = Array.isArray(body?.history)
@@ -17,10 +17,10 @@ export async function POST(req: NextRequest) {
         .slice(-3)
         .map((h: { q?: unknown; a?: unknown }) => ({ q: String(h?.q ?? "").slice(0, 300), a: String(h?.a ?? "").slice(0, 1500) }))
     : [];
-  if ((store !== "play" && store !== "ios") || !/^[\w.]{3,200}$/.test(id) || question.length < 3) {
+  if (!validAppRef(store, id) || question.length < 3) {
     return Response.json({ error: "Ask a question about a specific app." }, { status: 400 });
   }
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  const ip = await visitorId(req);
   const allowance = await checkAllowance("question", ip);
   if (!allowance.ok) {
     const message = {

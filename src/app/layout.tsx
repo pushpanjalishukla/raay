@@ -81,6 +81,8 @@ function Shell({ children }: { children: React.ReactNode }) {
               <li><Link href="/#how" className="hover:text-ink">How it works</Link></li>
               <li><Link href="/#faq" className="hover:text-ink">FAQ</Link></li>
               <li><a href={BRAND.github} target="_blank" rel="noreferrer" className="hover:text-ink">GitHub</a></li>
+              <li><Link href="/privacy" className="hover:text-ink">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="hover:text-ink">Terms of Service</Link></li>
             </ul>
           </div>
         </div>

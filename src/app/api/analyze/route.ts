@@ -1,16 +1,18 @@
 import type { NextRequest } from "next/server";
 import { analyze } from "@/lib/analyze";
-import type { Store } from "@/lib/types";
+import { overLimit, tooMany, validAppRef, visitorId } from "@/lib/visitor";
 
 export const maxDuration = 300;
 
 export async function GET(req: NextRequest) {
-  const store = req.nextUrl.searchParams.get("store") as Store | null;
-  const id = req.nextUrl.searchParams.get("id")?.trim();
-  if ((store !== "play" && store !== "ios") || !id || !/^[\w.]{3,200}$/.test(id)) {
-    return Response.json({ error: "Pass ?store=play|ios&id=<app id>" }, { status: 400 });
+  const store = req.nextUrl.searchParams.get("store");
+  const id = req.nextUrl.searchParams.get("id")?.trim() ?? "";
+  if (!validAppRef(store, id)) {
+    return Response.json({ error: "That doesn't look like a valid app link or id." }, { status: 400 });
   }
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  const ip = await visitorId(req);
+  // Requests only reach here on a CDN miss; cap how fast one visitor can trigger fresh fetches.
+  if (await overLimit("analyze", ip, 40, 600)) return tooMany();
   try {
     const data = await analyze(store, id, ip);
     const ttl = data.engine === "lexicon" ? 1800 : 21600;

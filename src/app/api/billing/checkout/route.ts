@@ -1,7 +1,8 @@
 import type { NextRequest } from "next/server";
-import { getPlanState, getUserId, setPlanState } from "@/lib/auth";
+import { activePlan, getPlanState, getUserId, setPlanState } from "@/lib/auth";
 import { isPlanKey, PLANS } from "@/lib/plans";
 import { billingEnabled, createSubscription, publicKeyId } from "@/lib/razorpay";
+import { overLimit, tooMany } from "@/lib/visitor";
 
 export async function POST(req: NextRequest) {
   if (!billingEnabled()) return Response.json({ error: "Payments aren't switched on yet." }, { status: 503 });
@@ -10,10 +11,15 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const plan = body?.plan;
   if (!isPlanKey(plan)) return Response.json({ error: "Unknown plan." }, { status: 400 });
+  if (await overLimit("checkout", userId, 6, 3600)) return tooMany();
   try {
-    const sub = await createSubscription(plan, userId);
     const state = await getPlanState(userId);
-    await setPlanState(userId, { subscriptionId: sub.id });
+    if (activePlan(state) === plan) {
+      return Response.json({ error: `You're already on ${PLANS[plan].name}.` }, { status: 409 });
+    }
+    const sub = await createSubscription(plan, userId);
+    // Keep the paid subscription untouched until this one is verified.
+    await setPlanState(userId, { pendingSubscriptionId: sub.id });
     return Response.json({
       keyId: publicKeyId(),
       subscriptionId: sub.id,

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
-import { getUserId, setPlanState } from "@/lib/auth";
+import { getPlanState, getUserId, setPlanState } from "@/lib/auth";
 import { isPlanKey } from "@/lib/plans";
-import { getSubscription, verifyCheckout } from "@/lib/razorpay";
+import { cancelSubscription, getSubscription, verifyCheckout } from "@/lib/razorpay";
 
 export async function POST(req: NextRequest) {
   const userId = await getUserId();
@@ -17,11 +17,17 @@ export async function POST(req: NextRequest) {
   if (sub.notes?.userId !== userId || !isPlanKey(sub.notes?.plan)) {
     return Response.json({ error: "This payment belongs to a different account." }, { status: 403 });
   }
+  const previous = (await getPlanState(userId)).subscriptionId;
   await setPlanState(userId, {
     plan: sub.notes.plan,
     status: sub.status === "created" ? "authenticated" : sub.status,
     currentEnd: sub.current_end ?? Math.floor(Date.now() / 1000) + 31 * 86400,
     subscriptionId: sub.id,
+    pendingSubscriptionId: null,
   });
+  // Switching plans: stop the old subscription so the user isn't charged twice.
+  if (previous && previous !== sub.id) {
+    await cancelSubscription(previous, false).catch((err) => console.error("[raay] cancel old subscription failed:", err));
+  }
   return Response.json({ ok: true, plan: sub.notes.plan });
 }

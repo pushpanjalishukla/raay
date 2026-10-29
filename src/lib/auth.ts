@@ -17,6 +17,8 @@ export interface PlanState {
   /** Unix seconds when the current paid period ends. */
   currentEnd: number | null;
   subscriptionId: string | null;
+  /** Created at checkout, promoted to subscriptionId only once payment is verified. */
+  pendingSubscriptionId: string | null;
   email: string | null;
   name: string | null;
 }
@@ -32,6 +34,7 @@ export async function getPlanState(userId: string): Promise<PlanState> {
     status: typeof pub.planStatus === "string" ? pub.planStatus : null,
     currentEnd: typeof pub.planCurrentEnd === "number" ? pub.planCurrentEnd : null,
     subscriptionId: typeof priv.razorpaySubscriptionId === "string" ? priv.razorpaySubscriptionId : null,
+    pendingSubscriptionId: typeof priv.pendingSubscriptionId === "string" ? priv.pendingSubscriptionId : null,
     email: user.primaryEmailAddress?.emailAddress ?? null,
     name: [user.firstName, user.lastName].filter(Boolean).join(" ") || null,
   };
@@ -49,7 +52,13 @@ export function activePlan(s: PlanState): PlanKey | null {
 
 export async function setPlanState(
   userId: string,
-  update: { plan?: PlanKey | null; status?: string; currentEnd?: number | null; subscriptionId?: string },
+  update: {
+    plan?: PlanKey | null;
+    status?: string;
+    currentEnd?: number | null;
+    subscriptionId?: string;
+    pendingSubscriptionId?: string | null;
+  },
 ) {
   const { clerkClient } = await import("@clerk/nextjs/server");
   const client = await clerkClient();
@@ -59,5 +68,6 @@ export async function setPlanState(
   if (update.currentEnd !== undefined) publicMetadata.planCurrentEnd = update.currentEnd;
   const privateMetadata: Record<string, unknown> = {};
   if (update.subscriptionId) privateMetadata.razorpaySubscriptionId = update.subscriptionId;
+  if (update.pendingSubscriptionId !== undefined) privateMetadata.pendingSubscriptionId = update.pendingSubscriptionId;
   await client.users.updateUserMetadata(userId, { publicMetadata, privateMetadata });
 }

@@ -199,8 +199,17 @@ export default function PricingPlans() {
       </div>
       {error && <p className="mt-4 text-sm text-critical">{error}</p>}
       <p className="mt-6 text-sm text-ink-3">
-        Payments are processed securely by Razorpay: UPI, cards, netbanking and wallets. Cancel anytime from your account.
-        You keep access until the end of the month you&apos;ve paid for.
+        Payments are processed securely by Razorpay: UPI, cards, netbanking and wallets. We never see your card or UPI
+        details. Cancel anytime from your account; you keep access until the end of the month you&apos;ve paid for. By
+        subscribing you agree to our{" "}
+        <Link href="/terms" className="underline">
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="underline">
+          Privacy Policy
+        </Link>
+        .
       </p>
     </div>
   );

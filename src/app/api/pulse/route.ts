@@ -3,12 +3,23 @@ import { computePulse, type PulseRow } from "@/lib/pulse";
 
 export const maxDuration = 60;
 
+type Board = { at: string; rows: PulseRow[] };
+// One rebuild at a time per instance, so a burst of visitors can't trigger many scrapes.
+let building: Promise<Board> | null = null;
+
+async function rebuild(): Promise<Board> {
+  const data = { at: new Date().toISOString(), rows: await computePulse() };
+  if (data.rows.length) await sharedCache().set("pulse:board:v1", data, { ttl: 6 * 3600, name: "raay-pulse-board" }).catch(() => {});
+  return data;
+}
+
 export async function GET() {
-  const cache = sharedCache();
-  let data = (await cache.get("pulse:board:v1").catch(() => null)) as { at: string; rows: PulseRow[] } | null;
+  let data = (await sharedCache().get("pulse:board:v1").catch(() => null)) as Board | null;
   if (!data) {
-    data = { at: new Date().toISOString(), rows: await computePulse() };
-    if (data.rows.length) await cache.set("pulse:board:v1", data, { ttl: 6 * 3600, name: "raay-pulse-board" }).catch(() => {});
+    building ??= rebuild().finally(() => {
+      building = null;
+    });
+    data = await building;
   }
   return Response.json(data, {
     headers: { "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=86400" },

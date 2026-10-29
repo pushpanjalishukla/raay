@@ -85,10 +85,11 @@ export async function createSubscription(plan: PlanKey, userId: string): Promise
 
 export const getSubscription = (id: string) => rp<RzpSubscription>(`/subscriptions/${encodeURIComponent(id)}`);
 
-export const cancelSubscription = (id: string) =>
+/** Cancels a subscription. By default access continues to the end of the paid month. */
+export const cancelSubscription = (id: string, atCycleEnd = true) =>
   rp<RzpSubscription>(`/subscriptions/${encodeURIComponent(id)}/cancel`, {
     method: "POST",
-    body: { cancel_at_cycle_end: 1 },
+    body: { cancel_at_cycle_end: atCycleEnd ? 1 : 0 },
   });
 
 function safeEqualHex(a: string, b: string) {

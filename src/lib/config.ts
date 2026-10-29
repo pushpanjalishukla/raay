@@ -9,6 +9,8 @@ export const BRAND = {
   authorUrl: "https://github.com/pushpanjalishukla",
   /** Public contact link for "Talk to us" buttons. Leave empty to hide them. */
   contactUrl: process.env.NEXT_PUBLIC_CONTACT_URL ?? "",
+  /** Support / grievance email shown on the privacy and terms pages. */
+  contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "",
 };
 
 export const SAMPLE_APPS = [
