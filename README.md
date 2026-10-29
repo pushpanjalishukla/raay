@@ -10,6 +10,8 @@
 
 ![Raay analytics dashboard: sentiment volume and rating trend](docs/analytics.jpg)
 
+![Ask Raay: AI answers about payment complaints, with the reviews behind them](docs/ask.jpg)
+
 ## Why it exists
 
 Indian consumer apps get thousands of reviews a week, and a large share are code-mixed Hinglish or written in Indian scripts. Existing review tools are priced in dollars and built for English. Pasting reviews into a chatbot gives you a one-off answer on a sample you picked by hand.
