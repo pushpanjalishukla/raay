@@ -57,6 +57,8 @@ export interface RawReview {
   version?: string;
   thumbsUp: number;
   replied: boolean;
+  /** Hours between the review and the developer's reply (Play Store only). */
+  replyHours?: number;
 }
 
 export interface LabeledReview extends RawReview {
@@ -111,6 +113,10 @@ export interface Analysis {
   app: AppMeta;
   generatedAt: string;
   engine: "claude" | "lexicon" | "hybrid";
+  /** Whether the server has AI configured (Ask Raay works even if this report used the built-in classifier). */
+  aiAvailable?: boolean;
+  /** Set when the report was downgraded for one visitor only; never cache it for others. */
+  personal?: boolean;
   model?: string;
   note?: string;
   summary: string;

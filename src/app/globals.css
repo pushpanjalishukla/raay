@@ -85,3 +85,19 @@ body {
 .pulse-dot {
   animation: pulse-dot 1.2s ease-in-out infinite;
 }
+
+@media print {
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff;
+    color: #0b0b0b;
+  }
+  section,
+  .rounded-xl {
+    break-inside: avoid;
+  }
+}

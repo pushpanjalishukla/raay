@@ -6,6 +6,7 @@ import { CATEGORY_INFO } from "@/lib/categories";
 import type { Analysis, Category, Lang } from "@/lib/types";
 import { RatingTrendChart, SentimentLegend, SentimentSplitChart, SentimentVolumeChart } from "./AnalyticsCharts";
 import DataTable, { type Column } from "./DataTable";
+import DeepAnalytics from "./DeepAnalytics";
 
 const pct = (n: number) => `${Math.round(n * 100)}%`;
 
@@ -28,10 +29,12 @@ export default function AnalyticsTab({
   data,
   onTopic,
   onLang,
+  onSearch,
 }: {
   data: Analysis;
   onTopic: (c: Category) => void;
   onLang: (l: Lang) => void;
+  onSearch: (q: string) => void;
 }) {
   const ts = useMemo(() => timeSeries(data.reviews), [data]);
   const topics = useMemo(() => topicTable(data.reviews), [data]);
@@ -92,6 +95,7 @@ export default function AnalyticsTab({
 
   return (
     <div className="space-y-4">
+      <h2 className="text-lg font-semibold tracking-tight">Trends</h2>
       <div className="grid gap-4 lg:grid-cols-2">
         <Card title="Review volume by sentiment" sub={tsSub} right={<SentimentLegend />}>
           <SentimentVolumeChart rows={ts.rows} />
@@ -180,6 +184,7 @@ export default function AnalyticsTab({
         </Card>
         </div>
       </div>
+      <DeepAnalytics data={data} onSearch={onSearch} onTopic={onTopic} />
     </div>
   );
 }

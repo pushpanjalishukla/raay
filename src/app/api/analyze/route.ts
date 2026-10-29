@@ -15,7 +15,9 @@ export async function GET(req: NextRequest) {
     const data = await analyze(store, id, ip);
     const ttl = data.engine === "lexicon" ? 1800 : 21600;
     return Response.json(data, {
-      headers: { "Cache-Control": `public, s-maxage=${ttl}, stale-while-revalidate=86400` },
+      headers: {
+        "Cache-Control": data.personal ? "private, no-store" : `public, s-maxage=${ttl}, stale-while-revalidate=86400`,
+      },
     });
   } catch (err) {
     console.error("[raay] analyze failed:", err);

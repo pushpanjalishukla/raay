@@ -61,6 +61,18 @@ export async function searchApps(term: string): Promise<SearchHit[]> {
   return hits;
 }
 
+// Raw reviews are cheap to fetch but we still avoid refetching for every
+// "Ask Raay" question about the same app.
+const rawCache = new Map<string, { at: number; data: { app: AppMeta; reviews: RawReview[] } }>();
+export async function fetchAppCached(store: Store, id: string) {
+  const key = `${store}:${id}`;
+  const hit = rawCache.get(key);
+  if (hit && Date.now() - hit.at < 15 * 60_000) return hit.data;
+  const data = await fetchApp(store, id);
+  rawCache.set(key, { at: Date.now(), data });
+  return data;
+}
+
 export async function fetchApp(
   store: Store,
   id: string,
@@ -89,6 +101,10 @@ async function fetchPlay(appId: string) {
       version: r.version || undefined,
       thumbsUp: r.thumbsUp ?? 0,
       replied: Boolean(r.replyText),
+      replyHours:
+        r.replyText && r.replyDate
+          ? Math.max(0, (Date.parse(r.replyDate) - Date.parse(r.date)) / 3_600_000)
+          : undefined,
     });
   }
   reviews.sort((a, b) => b.date.localeCompare(a.date));

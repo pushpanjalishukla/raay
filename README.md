@@ -24,6 +24,13 @@ Raay fetches the data itself, labels every review, tracks complaint rates per re
 - **Release health.** Negative-review share per app version, with automatic spike detection.
 - **Reply drafts** in the reviewer's own language and script (Hinglish to Hinglish, Hindi to Hindi).
 - **Competitor comparison.** A heat table of complaint mix across up to 4 apps.
+- **Ask Raay (AI chat).** Ask anything about an app's reviews ("Why are people angry about refunds?") and get an answer backed by the exact reviews, plus follow-up questions.
+- **Where your stars go.** A rating-impact waterfall showing how much each problem costs you in stars, and how much rating is left on the table.
+- **Churn & rivals.** Spots users who say they'll uninstall or switch, and which competitors they name (Blinkit, PhonePe, Swiggy…), with the quotes.
+- **Did the release fix it?** Each topic's complaint rate in the latest version vs earlier ones, with a verdict (new, getting worse, improving, gone).
+- **Text analytics.** The words behind 1–2★ vs 4–5★ reviews, and what each language complains about.
+- **Support & marketing.** Reply rate by star, median reply time, unanswered unhappy reviews, feature requests, and quotable 5★ reviews.
+- **Share & export.** Copy a Slack digest, save the report as PDF, or download reviews as CSV.
 - **Analytics dashboard.** Review volume by sentiment over time, average-rating trend, a topic-by-release heatmap, sortable topic and language tables, and sentiment split by language.
 - **Reviews data table.** Search, filter by topic, language and sentiment, sort any column, and download as CSV.
 - **Competitor metrics.** Sortable key-metrics table, sentiment split and complaint-mix heat table across apps.
@@ -46,7 +53,7 @@ App Store RSS + iTunes lookup ─────┼─► fetch latest ~250 reviews
         stats: complaint mix · language mix · per-version spikes · trends
                                    │
                                    ▼
-          cached 6h (in memory + Vercel CDN) → Next.js report UI
+   cached 12h (Vercel CDN + Vercel Runtime Cache + in-memory) → Next.js report UI
 ```
 
 ## Tech stack
@@ -71,8 +78,19 @@ Open http://localhost:3000 and search for any app.
 |---|---|---|
 | `ANTHROPIC_API_KEY` | No | Turns on AI labelling, insights and reply drafts |
 | `RAAY_MODEL` | No | Claude model ID (default `claude-opus-5-5`; `claude-haiku-5-5` is much cheaper) |
+| `RAAY_LABEL_MODEL` | No | Model for bulk review labelling (defaults to `RAAY_MODEL`; `claude-haiku-5-5` cuts cost sharply) |
 | `RAAY_AI_PER_IP_PER_HOUR` | No | Fresh AI analyses allowed per visitor per hour (default 5) |
+| `RAAY_AI_DAILY_LIMIT` | No | Fresh AI analyses allowed per day across the whole site (default 40) |
+| `RAAY_ASK_PER_IP_PER_HOUR` / `RAAY_ASK_DAILY_LIMIT` | No | Ask Raay question limits (default 15 per visitor per hour, 300 per day) |
+| `RAAY_CACHE_HOURS` | No | How long an AI report is reused (default 12) |
 | `NEXT_PUBLIC_CONTACT_URL` | No | Link for the "Talk to us" buttons (hidden when empty) |
+
+## Built to handle traffic
+
+- Pages are static and served from Vercel's CDN.
+- Each app's AI report is computed once and shared by every visitor through three cache layers (CDN, Vercel Runtime Cache shared across servers and deploys, and in-memory with request de-duplication).
+- Per-visitor and site-wide daily caps on paid AI calls. Past a cap, visitors get the free built-in classifier instead of an error.
+- If a Claude call fails or is rate-limited, that part of the report falls back to the built-in classifier.
 
 ## Business model
 

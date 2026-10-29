@@ -4,6 +4,8 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
+  LabelList,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -192,6 +194,87 @@ export function SentimentSplitChart({ rows }: { rows: SplitRow[] }) {
               isAnimationActive={false}
             />
           ))}
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+export interface WaterfallInput {
+  actual: number;
+  potential: number;
+  steps: { label: string; short: string; delta: number; count: number }[];
+}
+
+interface WaterfallRow {
+  name: string;
+  full: string;
+  base: number;
+  value: number;
+  kind: "total" | "loss";
+  label: string;
+  tip: string;
+}
+
+function waterfallRows(data: WaterfallInput, floor: number): WaterfallRow[] {
+  const rows: WaterfallRow[] = [
+    { name: "Potential", full: "Potential rating", base: 0, value: data.potential - floor, kind: "total", label: data.potential.toFixed(2), tip: "If every complaint became a happy review" },
+  ];
+  let level = data.potential;
+  for (const s of data.steps) {
+    const top = level;
+    level -= s.delta;
+    rows.push({
+      name: s.short,
+      full: s.label,
+      base: level - floor,
+      value: top - level,
+      kind: "loss",
+      label: `−${s.delta.toFixed(2)}`,
+      tip: `${s.count} complaints cost ${s.delta.toFixed(2)}★`,
+    });
+  }
+  rows.push({ name: "Actual", full: "Actual recent rating", base: 0, value: data.actual - floor, kind: "total", label: data.actual.toFixed(2), tip: "Average of the reviews analyzed" });
+  return rows;
+}
+
+/**
+ * Waterfall from the rating the app could have to the rating it has.
+ * Values are shifted by `floor` so bars start at the axis minimum, not zero.
+ */
+export function RatingWaterfallChart({ data }: { data: WaterfallInput }) {
+  const floor = Math.max(1, Math.floor((data.actual - 0.25) * 2) / 2);
+  const rows = waterfallRows(data, floor);
+  type Row = WaterfallRow;
+  const Tip = ({ active, payload }: TipProps) => {
+    if (!active || !payload?.length) return null;
+    const r = payload[0].payload as Row;
+    return <TipBox title={r.full} rows={[{ label: r.tip, value: r.kind === "total" ? `★ ${r.label}` : `${r.label}★` }]} />;
+  };
+  const ticks: number[] = [];
+  for (let t = floor; t <= 5.001; t += 0.5) ticks.push(t - floor);
+  return (
+    <div className="h-72">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={rows} margin={{ top: 22, right: 8, bottom: 0, left: -16 }} barCategoryGap="22%">
+          <CartesianGrid vertical={false} stroke="var(--grid)" />
+          <XAxis dataKey="name" tick={{ ...AXIS, fontSize: 11 }} tickLine={false} axisLine={{ stroke: "var(--grid)" }} interval={0} />
+          <YAxis
+            domain={[0, 5 - floor]}
+            ticks={ticks}
+            tickFormatter={(v: number) => (v + floor).toFixed(1)}
+            tick={AXIS}
+            tickLine={false}
+            axisLine={false}
+          />
+          <Tooltip content={Tip} cursor={{ fill: "var(--surface-2)" }} />
+          <Bar dataKey="base" stackId="w" fill="transparent" isAnimationActive={false} />
+          <Bar dataKey="value" stackId="w" radius={[4, 4, 0, 0]} isAnimationActive={false}>
+            {rows.map((r) => (
+              <Cell key={r.name} fill={r.kind === "total" ? "var(--series)" : "var(--neg)"} />
+            ))}
+            <LabelList dataKey="label" position="top" style={{ fontSize: 11, fill: "var(--ink-2)" }} />
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </div>

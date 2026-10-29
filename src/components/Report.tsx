@@ -5,7 +5,11 @@ import { useEffect, useMemo, useState } from "react";
 import { CATEGORY_INFO, LANG_LABEL } from "@/lib/categories";
 import { BRAND } from "@/lib/config";
 import type { Analysis, Category, LabeledReview, Lang, Store } from "@/lib/types";
+import { churnSignals, mostUpvotedComplaints, ratingWaterfall, slackDigest } from "@/lib/deep";
+import { RatingWaterfallChart } from "./AnalyticsCharts";
 import AnalyticsTab from "./AnalyticsTab";
+import AskRaay from "./AskRaay";
+import ChurnTab from "./ChurnTab";
 import ReviewsTable, { NO_FILTERS, type ReviewFilters } from "./ReviewsTable";
 import { StoreBadge } from "./AppSearch";
 import { BarList, Stat } from "./charts";
@@ -130,10 +134,12 @@ function Section({ title, sub, children }: { title: string; sub?: string; childr
   );
 }
 
-type Tab = "overview" | "analytics" | "reviews";
+type Tab = "overview" | "analytics" | "churn" | "ask" | "reviews";
 const TABS: { key: Tab; label: string }[] = [
   { key: "overview", label: "Overview" },
   { key: "analytics", label: "Analytics" },
+  { key: "churn", label: "Churn & rivals" },
+  { key: "ask", label: "Ask AI ✦" },
   { key: "reviews", label: "Reviews" },
 ];
 
@@ -168,6 +174,10 @@ export default function Report({ store, id }: { store: Store; id: string }) {
   if (!data) return <Loading />;
 
   const { app, stats } = data;
+  const wf = ratingWaterfall(data.reviews);
+  const churn = churnSignals(data.reviews, app.title);
+  const loudest = mostUpvotedComplaints(data.reviews);
+  const aiOn = data.aiAvailable ?? data.engine !== "lexicon";
   const indicShare = stats.langs
     .filter((l) => l.lang !== "english" && l.lang !== "other")
     .reduce((a, l) => a + l.share, 0);
@@ -201,8 +211,19 @@ export default function Report({ store, id }: { store: Store; id: string }) {
             {data.engine === "lexicon" ? "Built-in classifier" : `AI analysis by Claude`}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <CopyButton text={typeof window !== "undefined" ? window.location.href : ""} label="Copy report link" />
+        <div className="flex flex-wrap gap-2 no-print">
+          <CopyButton text={typeof window !== "undefined" ? window.location.href : ""} label="Copy link" />
+          <CopyButton
+            text={slackDigest(data, typeof window !== "undefined" ? window.location.href.split("#")[0] : "")}
+            label="Copy Slack digest"
+          />
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="text-sm px-3 py-1.5 rounded-lg border border-border hover:border-ink-3"
+          >
+            Save as PDF
+          </button>
           <Link
             href={`/compare?apps=${store}:${id}`}
             className="text-sm px-3 py-1.5 rounded-lg bg-ink text-bg hover:opacity-90"
@@ -216,14 +237,14 @@ export default function Report({ store, id }: { store: Store; id: string }) {
         <p className="mt-6 rounded-lg bg-warning-bg text-warning-ink text-sm px-4 py-3">{data.note}</p>
       )}
 
-      <div id="tabs" className="mt-6 border-b border-border flex gap-1 scroll-mt-16" role="tablist">
+      <div id="tabs" className="mt-6 border-b border-border flex gap-1 scroll-mt-16 overflow-x-auto no-print" role="tablist">
         {TABS.map((t) => (
           <button
             key={t.key}
             role="tab"
             aria-selected={tab === t.key}
             onClick={() => go(t.key)}
-            className={`px-4 py-2.5 text-sm font-medium -mb-px border-b-2 ${
+            className={`px-4 py-2.5 text-sm font-medium -mb-px border-b-2 whitespace-nowrap ${
               tab === t.key ? "border-accent text-ink" : "border-transparent text-ink-3 hover:text-ink"
             }`}
           >
@@ -233,7 +254,7 @@ export default function Report({ store, id }: { store: Store; id: string }) {
         ))}
       </div>
 
-      {tab !== "reviews" && (
+      {(tab === "overview" || tab === "analytics") && (
       <div className="mt-4 grid grid-cols-2 lg:grid-cols-5 gap-3">
         <Stat label="Reviews analyzed" value={String(stats.total)} sub="newest first" />
         <Stat label="Negative" value={pct(stats.negativeShare)} sub="1–2★ or clearly unhappy" />
@@ -258,7 +279,20 @@ export default function Report({ store, id }: { store: Store; id: string }) {
             data={data}
             onTopic={(cat) => openReviews({ cat })}
             onLang={(lang) => openReviews({ lang })}
+            onSearch={(q) => openReviews({ q })}
           />
+        </div>
+      )}
+
+      {tab === "churn" && (
+        <div className="mt-4">
+          <ChurnTab data={data} />
+        </div>
+      )}
+
+      {tab === "ask" && (
+        <div className="mt-4">
+          <AskRaay data={data} disabled={!aiOn} />
         </div>
       )}
 
@@ -274,6 +308,50 @@ export default function Report({ store, id }: { store: Store; id: string }) {
       <div className="mt-4 rounded-xl border border-border bg-surface p-5">
         <p className="text-sm font-medium text-accent">Summary</p>
         <p className="mt-2 text-lg leading-relaxed">{data.summary}</p>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+        <section className="lg:col-span-2 rounded-xl border border-border bg-surface p-5 min-w-0">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="font-semibold">Where your stars go</h2>
+            <p className="text-sm text-ink-2">
+              <span className="font-semibold text-ink tabular">+{(wf.potential - wf.actual).toFixed(2)}★</span> left on the table
+            </p>
+          </div>
+          <p className="text-xs text-ink-3 mt-0.5 mb-3">
+            How much each problem pulls down your recent rating, assuming fixed complaints become average happy reviews.
+          </p>
+          <RatingWaterfallChart data={wf} />
+        </section>
+        <div className="grid gap-4 content-start">
+          <button
+            type="button"
+            onClick={() => go("churn")}
+            className="text-left rounded-xl border border-border bg-surface p-5 hover:border-ink-3"
+          >
+            <p className="text-sm text-ink-2">Churn radar</p>
+            <p className="mt-1 text-2xl font-semibold tabular">
+              {churn.churn.length} <span className="text-base font-normal text-ink-2">users say they&apos;re leaving</span>
+            </p>
+            <p className="mt-1 text-sm text-ink-3">
+              {churn.competitors.length
+                ? `Rivals named: ${churn.competitors.slice(0, 3).map((c) => c.name).join(", ")}`
+                : "No competitors named in these reviews"}{" "}
+              →
+            </p>
+          </button>
+          <button
+            type="button"
+            onClick={() => go("ask")}
+            className="text-left rounded-xl bg-ink text-bg p-5 hover:opacity-95"
+          >
+            <p className="text-sm opacity-70">New</p>
+            <p className="mt-1 text-lg font-semibold">Ask Raay anything ✦</p>
+            <p className="mt-1 text-sm opacity-80">
+              “Why are people angry about refunds?” Get an answer with the exact reviews behind it.
+            </p>
+          </button>
+        </div>
       </div>
       {/* Insights */}
       <Section
@@ -314,6 +392,16 @@ export default function Report({ store, id }: { store: Store; id: string }) {
           {data.insights.length === 0 && <p className="text-ink-2">No clear complaint pattern in the latest reviews.</p>}
         </div>
       </Section>
+
+      {loudest.length > 0 && (
+        <Section title="Most-upvoted complaints" sub="Other users tapped 👍 on these, so they speak for many more people than one review.">
+          <div className="grid gap-3 md:grid-cols-2">
+            {loudest.map((r) => (
+              <ReviewCard key={r.id} r={r} />
+            ))}
+          </div>
+        </Section>
+      )}
 
       <div className="grid gap-x-10 lg:grid-cols-2">
         <Section title="What users complain about" sub="Click a bar to read those reviews.">
