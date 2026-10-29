@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { authEnabled, getPlanState, setPlanState } from "@/lib/auth";
 import { isPlanKey } from "@/lib/plans";
-import { cancelSubscription, verifyWebhook, type RzpSubscription } from "@/lib/razorpay";
+import { cancelSubscription, getSubscription, verifyWebhook, type RzpSubscription } from "@/lib/razorpay";
 
 // Razorpay → Raay: keeps each user's plan in sync on renewals, failures and cancellations.
 export async function POST(req: NextRequest) {
@@ -10,24 +10,24 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Invalid signature" }, { status: 400 });
   }
   if (!authEnabled()) return Response.json({ ok: true, skipped: "auth disabled" });
-  const event = JSON.parse(raw) as { event: string; payload?: { subscription?: { entity?: RzpSubscription } } };
-  const sub = event.payload?.subscription?.entity;
-  const userId = sub?.notes?.userId;
-  if (!sub || !userId) return Response.json({ ok: true, skipped: "no subscription" });
+  let event: { event: string; payload?: { subscription?: { entity?: RzpSubscription } } };
+  try {
+    event = JSON.parse(raw);
+  } catch {
+    return Response.json({ error: "Malformed payload" }, { status: 400 });
+  }
+  if (!event.event?.startsWith("subscription.")) return Response.json({ ok: true, skipped: event.event });
+  const subId = event.payload?.subscription?.entity?.id;
+  if (!subId) return Response.json({ ok: true, skipped: "no subscription" });
+  // Treat the event as a hint only: read the subscription's current state from Razorpay,
+  // so out-of-order or replayed events can't roll a user's plan back.
+  const sub = await getSubscription(subId);
+  const userId = sub.notes?.userId;
+  if (!userId) return Response.json({ ok: true, skipped: "no user" });
 
-  const status: Record<string, string> = {
-    "subscription.authenticated": "authenticated",
-    "subscription.activated": "active",
-    "subscription.charged": "active",
-    "subscription.resumed": "active",
-    "subscription.pending": "pending",
-    "subscription.halted": "halted",
-    "subscription.paused": "paused",
-    "subscription.cancelled": "cancelled",
-    "subscription.completed": "completed",
-  };
-  const next = status[event.event];
-  if (!next) return Response.json({ ok: true, skipped: event.event });
+  const known = ["created", "authenticated", "active", "pending", "halted", "paused", "cancelled", "completed", "expired"];
+  const next = known.includes(sub.status) ? sub.status : null;
+  if (!next || next === "created") return Response.json({ ok: true, skipped: `status ${sub.status}` });
 
   // Only the user's current subscription (or a just-paid pending one) may change their plan.
   // Late events for an old, replaced subscription are ignored.
