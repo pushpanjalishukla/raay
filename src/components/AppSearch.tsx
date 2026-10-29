@@ -25,7 +25,9 @@ export default function AppSearch({
   onPick,
   placeholder = "Search any app: Zepto, PhonePe, Swiggy… or paste a store link",
   autoFocus = false,
+  size = "md",
 }: {
+  size?: "md" | "lg";
   onPick?: (hit: { store: Store; id: string; title?: string }) => void;
   placeholder?: string;
   autoFocus?: boolean;
@@ -82,7 +84,13 @@ export default function AppSearch({
 
   return (
     <div ref={boxRef} className="relative w-full">
-      <div className="flex items-center gap-2 rounded-xl border border-border bg-surface px-4 h-14 shadow-sm focus-within:border-ink-3">
+      <div
+        className={`flex items-center gap-2 border bg-surface focus-within:border-ink-3 ${
+          size === "lg"
+            ? "rounded-2xl border-border pl-5 pr-2 h-16 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.25)]"
+            : "rounded-xl border-border px-4 h-14 shadow-sm"
+        }`}
+      >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-ink-3 shrink-0" aria-hidden>
           <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
           <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -100,6 +108,15 @@ export default function AppSearch({
           aria-label="Search for an app"
         />
         {loading && <span className="w-2 h-2 rounded-full bg-accent pulse-dot" aria-label="Searching" />}
+        {size === "lg" && (
+          <button
+            type="button"
+            onClick={() => (visible[0] ? pick(visible[0]) : boxRef.current?.querySelector("input")?.focus())}
+            className="h-12 px-5 rounded-xl bg-ink text-bg text-sm font-medium hover:opacity-90 shrink-0"
+          >
+            Analyze
+          </button>
+        )}
       </div>
       {open && visible.length > 0 && (
         <ul className="absolute z-30 mt-2 w-full rounded-xl border border-border bg-surface shadow-lg overflow-hidden">

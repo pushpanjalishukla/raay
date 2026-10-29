@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import AppSearch from "@/components/AppSearch";
+import HeroVisual from "@/components/HeroVisual";
+import LivePill from "@/components/LivePill";
 import PricingPlans from "@/components/PricingPlans";
 import PulseTable from "@/components/PulseTable";
 import { SAMPLE_APPS, SAMPLE_COMPARE } from "@/lib/config";
@@ -124,77 +126,6 @@ const FAQ = [
   },
 ];
 
-/* ---------- Product preview (illustrative) ---------- */
-
-function PreviewCard() {
-  const bars = [
-    { label: "Potential", h: 92, total: true },
-    { label: "Delivery", h: 22, top: 0 },
-    { label: "Refunds", h: 10, top: 22 },
-    { label: "Support", h: 7, top: 32 },
-    { label: "OTP", h: 5, top: 39 },
-    { label: "Actual", h: 48, total: true },
-  ];
-  return (
-    <div className="relative">
-      <div aria-hidden className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-accent/15 via-series/10 to-transparent blur-2xl" />
-      <div className="relative rounded-2xl border border-border bg-surface shadow-xl overflow-hidden">
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
-          <span className="grid place-items-center w-9 h-9 rounded-xl bg-[#5b2fd1] text-white text-sm font-semibold">Q</span>
-          <div className="min-w-0">
-            <p className="font-medium truncate">QuickBasket · Groceries</p>
-            <p className="text-xs text-ink-3">Example report · 260 latest reviews</p>
-          </div>
-          <span className="ml-auto text-[11px] px-2 py-0.5 rounded-full bg-surface-2 text-ink-2">AI analysis</span>
-        </div>
-        <div className="grid grid-cols-3 gap-px bg-border">
-          {[
-            ["Negative", "33%"],
-            ["Recent rating", "★ 3.65"],
-            ["Churn risk", "11 users"],
-          ].map(([k, v]) => (
-            <div key={k} className="bg-surface px-4 py-3">
-              <p className="text-[11px] text-ink-3">{k}</p>
-              <p className="text-lg font-semibold tabular">{v}</p>
-            </div>
-          ))}
-        </div>
-        <div className="px-5 pt-4">
-          <p className="text-xs font-medium text-ink-2">Where your stars go</p>
-          <div className="mt-3 flex items-end gap-2 h-28">
-            {bars.map((b) => (
-              <div key={b.label} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
-                <div className="w-full flex-1 relative">
-                  <div
-                    className={`absolute inset-x-0 rounded-t-[4px] ${b.total ? "bg-series bottom-0 anim-grow" : "bg-[var(--neg)] anim-drop"}`}
-                    style={{
-                      ...(b.total ? { height: `${b.h}%` } : { height: `${b.h}%`, top: `${8 + (b.top ?? 0)}%` }),
-                      animationDelay: `${0.3 + bars.indexOf(b) * 0.12}s`,
-                    }}
-                  />
-                </div>
-                <span className="text-[10px] text-ink-3">{b.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="p-5 space-y-3">
-          <p className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-ink text-bg px-3.5 py-2 text-sm anim-fade-up" style={{ animationDelay: "1.1s" }}>
-            Why are people angry about refunds?
-          </p>
-          <div className="rounded-2xl rounded-bl-sm bg-surface-2 px-3.5 py-2.5 text-sm text-ink anim-fade-up" style={{ animationDelay: "1.8s" }}>
-            <p>
-              14 of 260 reviews say money was deducted but the order never came. Most are on v26.10.2, and users like “paise
-              cut gaye, refund nahi mila” wait 5+ days.
-            </p>
-            <p className="mt-1.5 text-xs text-ink-3">Based on 4 cited reviews</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ---------- Page ---------- */
 
 export default function Home() {
@@ -202,64 +133,55 @@ export default function Home() {
     <div id="top">
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div aria-hidden className="absolute inset-0 bg-grid opacity-70" />
-        <div aria-hidden className="absolute inset-x-0 top-0 h-[560px] bg-[radial-gradient(55%_55%_at_15%_0%,color-mix(in_oklab,var(--accent)_14%,transparent),transparent)]" />
-        <div className="relative mx-auto max-w-6xl px-4 pt-16 pb-20 sm:pt-24 grid gap-14 lg:grid-cols-[1.1fr_1fr] items-center">
-          <div>
-            <Link
-              href="/app/play/com.zeptoconsumerapp#ask"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-sm text-ink-2 hover:border-ink-3"
-            >
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-accent">New</span>
-              Ask Raay: AI answers from real reviews
-              <span aria-hidden>→</span>
-            </Link>
-            <h1 className="mt-6 text-4xl sm:text-6xl font-semibold tracking-tight leading-[1.04]">
-              Your users already told you <span className="text-accent-gradient">what to fix.</span>
-            </h1>
-            <p className="mt-6 text-lg text-ink-2 max-w-xl">
-              Raay reads every Play Store and App Store review, in Hinglish, Hindi, Tamil or English, and turns them into a
-              ranked fix list, churn alerts and replies in your users&apos; own language.
-            </p>
-            <div className="mt-8 max-w-xl">
-              <AppSearch />
-              <p className="mt-3 text-sm text-ink-3">
-                Free, no sign-up · {FREE_LIMITS.report} AI reports a day · Results in about 20 seconds
-              </p>
-            </div>
+        <div aria-hidden className="absolute inset-0 bg-grid opacity-80" />
+        <div
+          aria-hidden
+          className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(45%_50%_at_50%_0%,color-mix(in_oklab,var(--accent)_16%,transparent),transparent)]"
+        />
+        <div className="relative mx-auto max-w-6xl px-4 pt-14 sm:pt-20 text-center">
+          <LivePill />
+          <h1 className="mt-8 mx-auto max-w-4xl text-[2.75rem] leading-[1.02] sm:text-7xl font-semibold tracking-[-0.035em]">
+            Your users already told you <br className="hidden sm:block" />
+            <span className="text-accent-gradient">what to fix.</span>
+          </h1>
+          <p className="mt-6 mx-auto max-w-2xl text-lg sm:text-xl text-ink-2 leading-relaxed">
+            Raay reads every Play Store and App Store review, in Hinglish, Hindi, Tamil or English, and turns them into a
+            ranked fix list, churn alerts and replies in your users&apos; own language.
+          </p>
+          <div className="mt-10 mx-auto max-w-2xl text-left">
+            <AppSearch size="lg" placeholder="Search any app or paste a Play Store / App Store link" />
           </div>
-          <PreviewCard />
-        </div>
-      </section>
-
-      {/* Live examples */}
-      <section className="border-y border-border bg-surface">
-        <div className="mx-auto max-w-6xl px-4 py-8 flex flex-wrap items-center gap-x-8 gap-y-4">
-          <p className="text-sm text-ink-3 shrink-0">See a live report:</p>
-          <div className="flex flex-wrap gap-3">
+          <div className="mt-5 flex flex-wrap justify-center items-center gap-2">
+            <span className="text-sm text-ink-3 mr-1">Try:</span>
             {SAMPLE_APPS.map((a) => (
               <Link
                 key={a.id}
                 href={`/app/${a.store}/${a.id}`}
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-bg pl-1.5 pr-3.5 py-1.5 text-sm hover:border-ink-3"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface pl-1 pr-3 py-1 text-sm hover:border-ink-3"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={a.icon} alt="" className="w-6 h-6 rounded-md" />
+                <img src={a.icon} alt="" className="w-5 h-5 rounded-[5px]" />
                 {a.name}
               </Link>
             ))}
             <Link
               href={`/compare?apps=${SAMPLE_COMPARE}`}
-              className="inline-flex items-center rounded-full bg-ink text-bg px-4 py-1.5 text-sm hover:opacity-90"
+              className="inline-flex items-center rounded-full border border-border bg-surface px-3 py-1 text-sm hover:border-ink-3"
             >
               Zepto vs Blinkit vs BigBasket →
             </Link>
           </div>
+          <p className="mt-5 text-sm text-ink-3">
+            Free · No sign-up · {FREE_LIMITS.report} AI reports a day · Results in about 20 seconds
+          </p>
+        </div>
+        <div className="relative mx-auto max-w-6xl px-4 mt-16 sm:mt-20 pb-20">
+          <HeroVisual />
         </div>
       </section>
 
       {/* Stats */}
-      <section className="mx-auto max-w-6xl px-4 pt-20">
+      <section className="mx-auto max-w-6xl px-4 pt-8">
         <dl className="grid grid-cols-2 lg:grid-cols-4 gap-px rounded-2xl border border-border bg-border overflow-hidden reveal">
           {[
             ["18", "popular Indian apps tracked live"],

@@ -6,6 +6,8 @@
 
 **Live demo:** https://raay-chi.vercel.app · try [Zepto](https://raay-chi.vercel.app/app/play/com.zeptoconsumerapp) or [Zepto vs Blinkit vs BigBasket](https://raay-chi.vercel.app/compare?apps=play:com.zeptoconsumerapp,play:com.grofers.customerapp,play:com.bigbasket.mobileapp)
 
+![Raay landing page](docs/hero.jpg)
+
 ![Raay report for Zepto: AI summary, top issues and actions](docs/report.jpg)
 
 ![Raay analytics dashboard: sentiment volume and rating trend](docs/analytics.jpg)
