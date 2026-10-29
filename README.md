@@ -4,6 +4,8 @@
 
 **Live demo:** https://raay-chi.vercel.app · try [Zepto](https://raay-chi.vercel.app/app/play/com.zeptoconsumerapp) or [Zepto vs Blinkit vs BigBasket](https://raay-chi.vercel.app/compare?apps=play:com.zeptoconsumerapp,play:com.grofers.customerapp,play:com.bigbasket.mobileapp)
 
+![Raay report for Zepto: AI summary, top issues and actions](docs/report.jpg)
+
 ## Why it exists
 
 Indian consumer apps get thousands of reviews a week, and a large share are code-mixed Hinglish or written in Indian scripts. Existing review tools are priced in dollars and built for English. Pasting reviews into a chatbot gives you a one-off answer on a sample you picked by hand.
