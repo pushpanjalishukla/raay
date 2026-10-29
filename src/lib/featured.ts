@@ -22,6 +22,9 @@ export interface FeaturedSnapshot {
 // Common Hindi words written in English letters; an "English" review containing them reads as Hinglish.
 const HINGLISH_HINT = /\b(acha|achha|accha|achcha|hai|he|ke|ka|ki|ko|nahi|nahin|nhi|ni|bahut|bhut|kya|mera|mere|mujhe|paise|bhai|wala|raha|gaya)\b/i;
 
+// Accusations about the company (fraud, fake, theft) don't belong on a public showcase.
+const ACCUSATION = /\b(fake|fraud|frod|scam|chor|loot|cheat|cheating|thief|dhokha|rewive fake)\b/i;
+
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
 
 /** Picks a short, readable, multilingual set of reviews that Raay decoded well. */
@@ -33,6 +36,8 @@ function pickReviews(reviews: LabeledReview[]): LabeledReview[] {
       r.text.length >= 25 &&
       r.text.length <= 140 &&
       r.category !== "trust_fraud" &&
+      !ACCUSATION.test(r.text) &&
+      !ACCUSATION.test(r.gist ?? "") &&
       !/\.\.\.|समीक्षा|review here/i.test(r.text) &&
       // Only show reviews whose language label is unambiguous at a glance.
       (detectLang(r.text) === r.lang || (r.lang === "hindi" && detectLang(r.text) === "marathi")) &&
