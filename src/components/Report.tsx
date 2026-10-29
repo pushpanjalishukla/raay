@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { CATEGORY_INFO, LANG_LABEL } from "@/lib/categories";
 import { BRAND } from "@/lib/config";
-import type { Analysis, Category, LabeledReview, Lang, Sentiment, Store } from "@/lib/types";
+import type { Analysis, Category, LabeledReview, Lang, Store } from "@/lib/types";
+import AnalyticsTab from "./AnalyticsTab";
+import ReviewsTable, { NO_FILTERS, type ReviewFilters } from "./ReviewsTable";
 import { StoreBadge } from "./AppSearch";
 import { BarList, Stat } from "./charts";
 
@@ -128,21 +130,31 @@ function Section({ title, sub, children }: { title: string; sub?: string; childr
   );
 }
 
+type Tab = "overview" | "analytics" | "reviews";
+const TABS: { key: Tab; label: string }[] = [
+  { key: "overview", label: "Overview" },
+  { key: "analytics", label: "Analytics" },
+  { key: "reviews", label: "Reviews" },
+];
+
 export default function Report({ store, id }: { store: Store; id: string }) {
   const { data, error } = useAnalysis(store, id);
-  const [cat, setCat] = useState<Category | null>(null);
-  const [lang, setLang] = useState<Lang | null>(null);
-  const [sent, setSent] = useState<Sentiment | null>(null);
-  const [limit, setLimit] = useState(30);
+  const [tab, setTab] = useState<Tab>(() => {
+    const h = typeof window !== "undefined" ? window.location.hash.slice(1) : "";
+    return (TABS.some((t) => t.key === h) ? h : "overview") as Tab;
+  });
+  const [filters, setFilters] = useState<ReviewFilters>(NO_FILTERS);
 
   const byId = useMemo(() => new Map((data?.reviews ?? []).map((r) => [r.id, r])), [data]);
-  const filtered = useMemo(
-    () =>
-      (data?.reviews ?? []).filter(
-        (r) => (!cat || r.category === cat) && (!lang || r.lang === lang) && (!sent || r.sentiment === sent),
-      ),
-    [data, cat, lang, sent],
-  );
+  const go = (t: Tab) => {
+    setTab(t);
+    history.replaceState(null, "", t === "overview" ? window.location.pathname : `#${t}`);
+    document.getElementById("tabs")?.scrollIntoView({ behavior: "smooth" });
+  };
+  const openReviews = (f: Partial<ReviewFilters>) => {
+    setFilters({ ...NO_FILTERS, ...f });
+    go("reviews");
+  };
 
   if (error)
     return (
@@ -204,11 +216,24 @@ export default function Report({ store, id }: { store: Store; id: string }) {
         <p className="mt-6 rounded-lg bg-warning-bg text-warning-ink text-sm px-4 py-3">{data.note}</p>
       )}
 
-      {/* Summary + stats */}
-      <div className="mt-6 rounded-xl border border-border bg-surface p-5">
-        <p className="text-sm font-medium text-accent">Summary</p>
-        <p className="mt-2 text-lg leading-relaxed">{data.summary}</p>
+      <div id="tabs" className="mt-6 border-b border-border flex gap-1 scroll-mt-16" role="tablist">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            role="tab"
+            aria-selected={tab === t.key}
+            onClick={() => go(t.key)}
+            className={`px-4 py-2.5 text-sm font-medium -mb-px border-b-2 ${
+              tab === t.key ? "border-accent text-ink" : "border-transparent text-ink-3 hover:text-ink"
+            }`}
+          >
+            {t.label}
+            {t.key === "reviews" && <span className="ml-1.5 text-ink-3 tabular">{stats.total}</span>}
+          </button>
+        ))}
       </div>
+
+      {tab !== "reviews" && (
       <div className="mt-4 grid grid-cols-2 lg:grid-cols-5 gap-3">
         <Stat label="Reviews analyzed" value={String(stats.total)} sub="newest first" />
         <Stat label="Negative" value={pct(stats.negativeShare)} sub="1–2★ or clearly unhappy" />
@@ -225,7 +250,31 @@ export default function Report({ store, id }: { store: Store; id: string }) {
           sub={app.store === "play" ? "of these reviews got a reply" : "not public on iOS"}
         />
       </div>
+      )}
 
+      {tab === "analytics" && (
+        <div className="mt-4">
+          <AnalyticsTab
+            data={data}
+            onTopic={(cat) => openReviews({ cat })}
+            onLang={(lang) => openReviews({ lang })}
+          />
+        </div>
+      )}
+
+      {tab === "reviews" && (
+        <div className="mt-4">
+          <ReviewsTable reviews={data.reviews} appName={app.title} filters={filters} setFilters={setFilters} />
+        </div>
+      )}
+
+      {tab === "overview" && (
+      <>
+      {/* Summary */}
+      <div className="mt-4 rounded-xl border border-border bg-surface p-5">
+        <p className="text-sm font-medium text-accent">Summary</p>
+        <p className="mt-2 text-lg leading-relaxed">{data.summary}</p>
+      </div>
       {/* Insights */}
       <Section
         title="Fix these first"
@@ -270,12 +319,7 @@ export default function Report({ store, id }: { store: Store; id: string }) {
         <Section title="What users complain about" sub="Click a bar to read those reviews.">
           <BarList
             rows={issueRows}
-            selected={cat}
-            onSelect={(k) => {
-              setCat(cat === k ? null : (k as Category));
-              setLimit(30);
-              document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth" });
-            }}
+            onSelect={(k) => openReviews({ cat: k as Category })}
           />
         </Section>
 
@@ -308,13 +352,9 @@ export default function Report({ store, id }: { store: Store; id: string }) {
           )}
         </Section>
 
-        <Section title="Languages" sub="Click a bar to filter reviews by language.">
+        <Section title="Languages" sub="Click a bar to read those reviews.">
           <BarList
-            selected={lang}
-            onSelect={(k) => {
-              setLang(lang === k ? null : (k as Lang));
-              setLimit(30);
-            }}
+            onSelect={(k) => openReviews({ lang: k as Lang })}
             rows={stats.langs.map((l) => ({
               key: l.lang,
               label: LANG_LABEL[l.lang],
@@ -361,47 +401,16 @@ export default function Report({ store, id }: { store: Store; id: string }) {
         </Section>
       )}
 
-      {/* Explorer */}
-      <section id="reviews" className="mt-10 scroll-mt-20">
-        <h2 className="text-xl font-semibold tracking-tight">Reviews</h2>
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
-          {(["negative", "neutral", "positive"] as Sentiment[]).map((s) => (
-            <button
-              key={s}
-              onClick={() => setSent(sent === s ? null : s)}
-              className={`px-3 py-1 rounded-full border capitalize ${
-                sent === s ? "bg-ink text-bg border-ink" : "border-border hover:border-ink-3"
-              }`}
-            >
-              {s}
-            </button>
-          ))}
-          {cat && (
-            <button onClick={() => setCat(null)} className="px-3 py-1 rounded-full bg-surface-2">
-              {CATEGORY_INFO[cat].label} ✕
-            </button>
-          )}
-          {lang && (
-            <button onClick={() => setLang(null)} className="px-3 py-1 rounded-full bg-surface-2">
-              {LANG_LABEL[lang]} ✕
-            </button>
-          )}
-          <span className="text-ink-3 ml-auto tabular">{filtered.length} reviews</span>
-        </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          {filtered.slice(0, limit).map((r) => (
-            <ReviewCard key={r.id} r={r} />
-          ))}
-        </div>
-        {filtered.length > limit && (
-          <button
-            onClick={() => setLimit(limit + 30)}
-            className="mt-4 text-sm px-4 py-2 rounded-lg border border-border hover:border-ink-3"
-          >
-            Show more
-          </button>
-        )}
-      </section>
+      <div className="mt-10 flex flex-wrap gap-3">
+        <button onClick={() => go("analytics")} className="text-sm px-4 py-2 rounded-lg bg-ink text-bg hover:opacity-90">
+          Open analytics dashboard →
+        </button>
+        <button onClick={() => go("reviews")} className="text-sm px-4 py-2 rounded-lg border border-border hover:border-ink-3">
+          Browse all {stats.total} reviews
+        </button>
+      </div>
+      </>
+      )}
 
       <div className="mt-12 rounded-xl bg-ink text-bg p-6 sm:p-8 flex flex-wrap items-center gap-4">
         <div className="flex-1 min-w-[16rem]">

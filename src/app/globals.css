@@ -16,6 +16,11 @@
   --good: #0ca30c;
   --warning-bg: #fff4e0;
   --warning-ink: #8a4b00;
+  --neg: #e34948;
+  --neu: #c3c2b7;
+  --pos: #2a78d6;
+  --grid: #e1e0d9;
+  --axis: #898781;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -35,6 +40,11 @@
     --good: #2dbb2d;
     --warning-bg: #3a2a10;
     --warning-ink: #ffcc80;
+    --neg: #e66767;
+    --neu: #57564f;
+    --pos: #3987e5;
+    --grid: #2c2c2a;
+    --axis: #898781;
   }
 }
 

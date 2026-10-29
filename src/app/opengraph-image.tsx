@@ -31,7 +31,7 @@ export default function OgImage() {
           Raay
         </div>
         <div style={{ display: "flex", fontSize: 64, fontWeight: 700, lineHeight: 1.1, marginTop: 40, maxWidth: 1000 }}>
-          What your users really think, in Hinglish, Hindi and English.
+          Your users already told you what to fix.
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 48 }}>
           {BARS.map((b) => (
@@ -43,7 +43,7 @@ export default function OgImage() {
           ))}
         </div>
         <div style={{ display: "flex", marginTop: "auto", fontSize: 26, color: "#8f8e86" }}>
-          AI review intelligence for Indian apps · Play Store + App Store
+          App review intelligence for Indian apps · Hinglish, Hindi & English
         </div>
       </div>
     ),

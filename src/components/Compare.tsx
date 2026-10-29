@@ -6,14 +6,54 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CATEGORY_INFO } from "@/lib/categories";
 import { SAMPLE_COMPARE } from "@/lib/config";
 import type { Analysis, Category, Store } from "@/lib/types";
+import { RAMP } from "@/lib/analytics";
 import AppSearch, { StoreBadge } from "./AppSearch";
+import { SentimentLegend, SentimentSplitChart } from "./AnalyticsCharts";
+import DataTable, { type Column } from "./DataTable";
 
 const MAX_APPS = 4;
 const pct = (n: number) => `${Math.round(n * 100)}%`;
-// Sequential single-hue ramp (light -> dark) for the heat table.
-const RAMP = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95"];
 
 type Ref = { store: Store; id: string };
+
+const indicShare = (d: Analysis) =>
+  d.stats.langs.filter((l) => l.lang !== "english" && l.lang !== "other").reduce((a, l) => a + l.share, 0);
+const topIssue = (d: Analysis) => d.stats.issues.find((i) => i.category !== "other");
+
+const METRIC_COLS: Column<Analysis>[] = [
+  {
+    key: "app",
+    header: "App",
+    sort: (d) => d.app.title,
+    render: (d) => (
+      <span className="flex items-center gap-2 whitespace-nowrap font-medium">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={d.app.icon} alt="" className="w-6 h-6 rounded-md" />
+        {d.app.title.split(/[:\-–]/)[0].trim()}
+      </span>
+    ),
+  },
+  { key: "store", header: "Store ★", align: "right", sort: (d) => d.app.rating, render: (d) => <span className="tabular">{d.app.rating.toFixed(2)}</span> },
+  { key: "recent", header: "Recent ★", align: "right", sort: (d) => d.stats.sampleAvgRating, render: (d) => <span className="tabular">{d.stats.sampleAvgRating.toFixed(2)}</span> },
+  { key: "neg", header: "Negative", align: "right", sort: (d) => d.stats.negativeShare, render: (d) => <span className="tabular">{pct(d.stats.negativeShare)}</span> },
+  { key: "indic", header: "Indian lang.", align: "right", sort: indicShare, render: (d) => <span className="tabular">{pct(indicShare(d))}</span> },
+  {
+    key: "reply",
+    header: "Dev replies",
+    align: "right",
+    sort: (d) => (d.app.store === "play" ? d.stats.replyRate : -1),
+    render: (d) => <span className="tabular">{d.app.store === "play" ? pct(d.stats.replyRate) : "n/a"}</span>,
+  },
+  {
+    key: "issue",
+    header: "Top complaint",
+    sort: (d) => topIssue(d)?.category ?? "",
+    render: (d) => {
+      const t = topIssue(d);
+      return <span className="whitespace-nowrap text-ink-2">{t ? `${CATEGORY_INFO[t.category].label} (${t.count})` : "–"}</span>;
+    },
+  },
+];
 type Slot = { status: "loading" } | { status: "error"; error: string } | { status: "done"; data: Analysis };
 
 function parseApps(s: string): Ref[] {
@@ -149,6 +189,39 @@ export default function Compare({ apps }: { apps: string }) {
             );
           })}
         </div>
+      )}
+
+      {done.length >= 1 && (
+        <section className="mt-10 grid gap-8">
+          <div className="min-w-0">
+            <h2 className="text-xl font-semibold tracking-tight">Key metrics</h2>
+            <p className="mt-1 mb-4 text-sm text-ink-2">Click a header to sort. Click a row for the full report.</p>
+            <DataTable
+              rows={done}
+              columns={METRIC_COLS}
+              rowKey={(d) => `${d.app.store}:${d.app.id}`}
+              initialSort={{ key: "neg", dir: "desc" }}
+              onRowClick={(d) => router.push(`/app/${d.app.store}/${d.app.id}`)}
+            />
+          </div>
+          <div className="min-w-0 max-w-2xl">
+            <h2 className="text-xl font-semibold tracking-tight">Sentiment split</h2>
+            <div className="mt-1 mb-4">
+              <SentimentLegend />
+            </div>
+            <div className="rounded-xl border border-border bg-surface p-4">
+              <SentimentSplitChart
+                rows={done.map((d) => ({
+                  label: d.app.title.split(/[:\-–]/)[0].trim(),
+                  total: d.reviews.length,
+                  negative: d.reviews.filter((r) => r.sentiment === "negative").length,
+                  neutral: d.reviews.filter((r) => r.sentiment === "neutral").length,
+                  positive: d.reviews.filter((r) => r.sentiment === "positive").length,
+                }))}
+              />
+            </div>
+          </div>
+        </section>
       )}
 
       {done.length >= 1 && cats.length > 0 && (

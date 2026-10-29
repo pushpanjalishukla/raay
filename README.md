@@ -1,5 +1,7 @@
 # Raay (राय)
 
+> Your users already told you what to fix.
+
 **App review intelligence for Indian apps.** Raay reads every Google Play and App Store review of your app and your competitors' (in English, Hinglish, Hindi, Tamil, Marathi and more) and turns them into the problems your team should fix this week. It flags bad releases and drafts replies in each user's own language.
 
 **Live demo:** https://raay-chi.vercel.app · try [Zepto](https://raay-chi.vercel.app/app/play/com.zeptoconsumerapp) or [Zepto vs Blinkit vs BigBasket](https://raay-chi.vercel.app/compare?apps=play:com.zeptoconsumerapp,play:com.grofers.customerapp,play:com.bigbasket.mobileapp)
@@ -20,7 +22,9 @@ Raay fetches the data itself, labels every review, tracks complaint rates per re
 - **Release health.** Negative-review share per app version, with automatic spike detection.
 - **Reply drafts** in the reviewer's own language and script (Hinglish to Hinglish, Hindi to Hindi).
 - **Competitor comparison.** A heat table of complaint mix across up to 4 apps.
-- **Review explorer.** Filter reviews by topic, language and sentiment.
+- **Analytics dashboard.** Review volume by sentiment over time, average-rating trend, a topic-by-release heatmap, sortable topic and language tables, and sentiment split by language.
+- **Reviews data table.** Search, filter by topic, language and sentiment, sort any column, and download as CSV.
+- **Competitor metrics.** Sortable key-metrics table, sentiment split and complaint-mix heat table across apps.
 - **Works without an API key.** A built-in English/Hinglish/Indic-script keyword classifier runs when no key is set. Claude takes over when `ANTHROPIC_API_KEY` is present.
 
 ## How it works
@@ -46,6 +50,7 @@ App Store RSS + iTunes lookup ─────┼─► fetch latest ~250 reviews
 ## Tech stack
 
 - **Next.js 16** (App Router, route handlers) + **TypeScript** + **Tailwind CSS 4**
+- **Recharts** for charts, plus hand-built sortable data tables
 - **Claude API** via `@anthropic-ai/sdk`: structured outputs with Zod schemas, server-side refusal fallbacks
 - **google-play-scraper** and Apple's public RSS/iTunes APIs for review data
 - Deployed on **Vercel**

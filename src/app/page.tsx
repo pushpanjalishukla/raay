@@ -80,7 +80,7 @@ export default function Home() {
       <section className="mx-auto max-w-6xl px-4 pt-16 pb-12 sm:pt-24">
         <p className="text-sm font-medium text-accent mb-4">App review intelligence for Indian apps</p>
         <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight max-w-4xl leading-[1.05]">
-          What are your users really saying, in Hinglish, Hindi and English?
+          Your users already told you what to fix.
         </h1>
         <p className="mt-6 text-lg text-ink-2 max-w-2xl">{BRAND.description}</p>
         <div className="mt-10 max-w-2xl">

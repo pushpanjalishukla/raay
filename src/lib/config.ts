@@ -1,9 +1,9 @@
 export const BRAND = {
   name: "Raay",
   native: "राय",
-  tagline: "What your users really think, in every Indian language.",
+  tagline: "Your users already told you what to fix.",
   description:
-    "Raay reads every Play Store and App Store review of your app and your competitors', in English, Hinglish, Hindi, Tamil and more. It turns them into the problems your team should fix this week, flags bad releases, and drafts replies in the user's own language.",
+    "Raay reads every Play Store and App Store review of your app and your competitors', in Hinglish, Hindi, Tamil or English, and turns them into a ranked fix list, bad-release alerts and replies in each user's own language.",
   github: "https://github.com/pushpanjalishukla/raay",
   author: "pushpanjalishukla",
   authorUrl: "https://github.com/pushpanjalishukla",
