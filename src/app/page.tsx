@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import AppSearch from "@/components/AppSearch";
 import PricingPlans from "@/components/PricingPlans";
+import PulseTable from "@/components/PulseTable";
 import { SAMPLE_APPS, SAMPLE_COMPARE } from "@/lib/config";
 import { FREE_LIMITS } from "@/lib/plans";
 
@@ -165,8 +166,11 @@ function PreviewCard() {
               <div key={b.label} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
                 <div className="w-full flex-1 relative">
                   <div
-                    className={`absolute inset-x-0 rounded-t-[4px] ${b.total ? "bg-series bottom-0" : "bg-[var(--neg)]"}`}
-                    style={b.total ? { height: `${b.h}%` } : { height: `${b.h}%`, top: `${8 + (b.top ?? 0)}%` }}
+                    className={`absolute inset-x-0 rounded-t-[4px] ${b.total ? "bg-series bottom-0 anim-grow" : "bg-[var(--neg)] anim-drop"}`}
+                    style={{
+                      ...(b.total ? { height: `${b.h}%` } : { height: `${b.h}%`, top: `${8 + (b.top ?? 0)}%` }),
+                      animationDelay: `${0.3 + bars.indexOf(b) * 0.12}s`,
+                    }}
                   />
                 </div>
                 <span className="text-[10px] text-ink-3">{b.label}</span>
@@ -175,10 +179,10 @@ function PreviewCard() {
           </div>
         </div>
         <div className="p-5 space-y-3">
-          <p className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-ink text-bg px-3.5 py-2 text-sm">
+          <p className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-ink text-bg px-3.5 py-2 text-sm anim-fade-up" style={{ animationDelay: "1.1s" }}>
             Why are people angry about refunds?
           </p>
-          <div className="rounded-2xl rounded-bl-sm bg-surface-2 px-3.5 py-2.5 text-sm text-ink">
+          <div className="rounded-2xl rounded-bl-sm bg-surface-2 px-3.5 py-2.5 text-sm text-ink anim-fade-up" style={{ animationDelay: "1.8s" }}>
             <p>
               14 of 260 reviews say money was deducted but the order never came. Most are on v26.10.2, and users like “paise
               cut gaye, refund nahi mila” wait 5+ days.
@@ -198,7 +202,8 @@ export default function Home() {
     <div id="top">
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div aria-hidden className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(60%_60%_at_20%_0%,color-mix(in_oklab,var(--accent)_12%,transparent),transparent)]" />
+        <div aria-hidden className="absolute inset-0 bg-grid opacity-70" />
+        <div aria-hidden className="absolute inset-x-0 top-0 h-[560px] bg-[radial-gradient(55%_55%_at_15%_0%,color-mix(in_oklab,var(--accent)_14%,transparent),transparent)]" />
         <div className="relative mx-auto max-w-6xl px-4 pt-16 pb-20 sm:pt-24 grid gap-14 lg:grid-cols-[1.1fr_1fr] items-center">
           <div>
             <Link
@@ -210,7 +215,7 @@ export default function Home() {
               <span aria-hidden>→</span>
             </Link>
             <h1 className="mt-6 text-4xl sm:text-6xl font-semibold tracking-tight leading-[1.04]">
-              Your users already told you what to fix.
+              Your users already told you <span className="text-accent-gradient">what to fix.</span>
             </h1>
             <p className="mt-6 text-lg text-ink-2 max-w-xl">
               Raay reads every Play Store and App Store review, in Hinglish, Hindi, Tamil or English, and turns them into a
@@ -253,8 +258,42 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Stats */}
+      <section className="mx-auto max-w-6xl px-4 pt-20">
+        <dl className="grid grid-cols-2 lg:grid-cols-4 gap-px rounded-2xl border border-border bg-border overflow-hidden reveal">
+          {[
+            ["18", "popular Indian apps tracked live"],
+            ["11", "languages understood, Hinglish included"],
+            ["~20s", "from store link to a full AI report"],
+            ["₹0", "to start: no card, no sign-up"],
+          ].map(([v, k]) => (
+            <div key={k} className="bg-surface px-6 py-7 flex flex-col-reverse gap-1">
+              <dt className="text-sm text-ink-2">{k}</dt>
+              <dd className="text-3xl sm:text-4xl font-semibold tracking-tight tabular">{v}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      {/* Pulse */}
+      <section id="pulse" className="mx-auto max-w-6xl px-4 pt-24 scroll-mt-16 reveal">
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <SectionHead
+            eyebrow="India App Pulse · live"
+            title="Which apps are users unhappiest with right now?"
+            sub="Raay tracks India's most popular apps every 6 hours. Here are the five with the most unhappy reviews."
+          />
+          <Link href="/pulse" className="h-10 px-4 inline-flex items-center rounded-lg border border-border text-sm hover:border-ink-3 shrink-0">
+            See all 18 apps →
+          </Link>
+        </div>
+        <div className="mt-8">
+          <PulseTable limit={5} filters={false} />
+        </div>
+      </section>
+
       {/* Features */}
-      <section id="features" className="mx-auto max-w-6xl px-4 py-24 scroll-mt-16">
+      <section id="features" className="mx-auto max-w-6xl px-4 py-24 scroll-mt-16 reveal">
         <SectionHead
           eyebrow="Features"
           title="Everything your team needs from app reviews"
@@ -277,7 +316,9 @@ export default function Home() {
       {/* How it works */}
       <section id="how" className="border-y border-border bg-surface scroll-mt-16">
         <div className="mx-auto max-w-6xl px-4 py-24">
-          <SectionHead eyebrow="How it works" title="From a store link to a fix list in 20 seconds" />
+          <div className="reveal">
+            <SectionHead eyebrow="How it works" title="From a store link to a fix list in 20 seconds" />
+          </div>
           <ol className="mt-12 grid gap-8 md:grid-cols-3">
             {STEPS.map((s, i) => (
               <li key={s.title} className="relative">
@@ -296,7 +337,7 @@ export default function Home() {
       </section>
 
       {/* Versus */}
-      <section className="mx-auto max-w-6xl px-4 py-24">
+      <section className="mx-auto max-w-6xl px-4 py-24 reveal">
         <SectionHead
           eyebrow="Why Raay"
           title="Not just a chatbot with your reviews pasted in"
@@ -336,7 +377,7 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="mx-auto max-w-3xl px-4 py-24 scroll-mt-16">
+      <section id="faq" className="mx-auto max-w-3xl px-4 py-24 scroll-mt-16 reveal">
         <div className="text-center">
           <Eyebrow>FAQ</Eyebrow>
           <h2 className="mt-3 text-3xl sm:text-4xl font-semibold tracking-tight">Questions, answered</h2>

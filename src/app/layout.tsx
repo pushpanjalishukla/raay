@@ -43,6 +43,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           <div className="hidden md:flex items-center gap-6 text-sm text-ink-2">
             <Link href="/#features" className="hover:text-ink">Features</Link>
             <Link href="/#how" className="hover:text-ink">How it works</Link>
+            <Link href="/pulse" className="hover:text-ink">App Pulse</Link>
             <Link href="/compare" className="hover:text-ink">Compare apps</Link>
             <Link href="/pricing" className="hover:text-ink">Pricing</Link>
           </div>
@@ -68,6 +69,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             <p className="font-medium">Product</p>
             <ul className="mt-3 space-y-2 text-ink-2">
               <li><Link href="/#features" className="hover:text-ink">Features</Link></li>
+              <li><Link href="/pulse" className="hover:text-ink">India App Pulse</Link></li>
               <li><Link href="/compare" className="hover:text-ink">Compare apps</Link></li>
               <li><Link href="/pricing" className="hover:text-ink">Pricing</Link></li>
               {AUTH_ON && <li><Link href="/account" className="hover:text-ink">Account</Link></li>}
