@@ -82,7 +82,11 @@ function Account() {
   const [me, setMe] = useState<Me | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const welcome = useSearchParams().get("welcome");
+  const params = useSearchParams();
+  const welcome = params.get("welcome");
+  // Dodo Payments sends buyers back here with ?subscription_id=…&status=…
+  const returnedSub = params.get("subscription_id");
+  const [confirmed, setConfirmed] = useState(false);
   const { user } = useUser();
   const { openUserProfile, signOut } = useClerk();
 
@@ -94,6 +98,40 @@ function Account() {
   useEffect(() => {
     load();
   }, []);
+
+  // Back from checkout: confirm the payment with the server (which asks Dodo), retrying
+  // briefly while a UPI or bank payment is still processing.
+  useEffect(() => {
+    if (!returnedSub) return;
+    let alive = true;
+    let tries = 0;
+    const confirmPayment = () =>
+      fetch("/api/billing/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscriptionId: returnedSub }),
+      })
+        .then(async (r) => {
+          const b = await r.json().catch(() => ({}));
+          if (!alive) return;
+          if (r.ok) {
+            window.history.replaceState(null, "", "/account?welcome=1");
+            setMsg(null);
+            setConfirmed(true);
+            load();
+          } else if (r.status === 202 && tries++ < 10) {
+            setMsg(b.error ?? "Your payment is still processing.");
+            setTimeout(confirmPayment, 4000);
+          } else {
+            setMsg(b.error ?? "Couldn't confirm your payment yet. Please refresh in a minute.");
+          }
+        })
+        .catch(() => alive && setMsg("Couldn't confirm your payment yet. Please refresh in a minute."));
+    confirmPayment();
+    return () => {
+      alive = false;
+    };
+  }, [returnedSub]);
 
   if (!me) return msg ? <p className="text-ink-2">{msg}</p> : <Skeleton />;
   if (!me.signedIn)
@@ -112,6 +150,13 @@ function Account() {
     load();
   };
 
+  const manageBilling = async () => {
+    const r = await fetch("/api/billing/portal", { method: "POST" });
+    const b = await r.json().catch(() => ({}));
+    if (r.ok && b.url) window.location.assign(b.url);
+    else setMsg(b.error ?? "Couldn't open billing.");
+  };
+
   const plan = me.plan ?? null;
   const next: PlanKey | null = plan === "growth" ? null : plan === "starter" ? "growth" : "starter";
   const ends = me.currentEnd ? new Date(me.currentEnd * 1000).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : null;
@@ -120,7 +165,7 @@ function Account() {
 
   return (
     <div className="space-y-6">
-      {welcome && plan && (
+      {(welcome || confirmed) && plan && (
         <p className="rounded-2xl border border-accent/40 bg-surface px-5 py-4 text-sm">
           Welcome to Raay {PLANS[plan].name}! Your AI allowance is live. Search any app to get started.
         </p>
@@ -196,6 +241,15 @@ function Account() {
               <Link href="/pricing" className="h-11 px-5 inline-flex items-center rounded-lg border border-border text-sm hover:border-ink-3">
                 Compare plans
               </Link>
+              {plan && me.billingEnabled && (
+                <button
+                  type="button"
+                  onClick={manageBilling}
+                  className="h-11 px-5 inline-flex items-center rounded-lg border border-border text-sm hover:border-ink-3"
+                >
+                  Invoices & payment method
+                </button>
+              )}
               {plan && me.status !== "cancelled" && me.billingEnabled && (
                 confirm ? (
                   <span className="inline-flex flex-wrap items-center gap-2 text-sm">

@@ -36,7 +36,10 @@ export default function TermsPage() {
       <section>
         <h2>4. Plans and payments</h2>
         <ul>
-          <li>Paid plans are billed monthly in Indian rupees through Razorpay and renew automatically.</li>
+          <li>
+            Paid plans are billed monthly in Indian rupees and renew automatically. Dodo Payments is our merchant of record:
+            it processes the payment, issues the invoice and handles applicable taxes.
+          </li>
           <li>You can cancel anytime from your account. You keep access until the end of the month you&apos;ve paid for.</li>
           <li>
             Payments are non-refundable except where required by law or in case of a billing error. Contact us within 7

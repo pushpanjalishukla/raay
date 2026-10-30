@@ -2,7 +2,7 @@
 
 import { useAuth, useClerk } from "@clerk/nextjs";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AUTH_ON } from "@/lib/client-flags";
 import { FREE_LIMITS, PLANS, isPlanKey, type PlanKey } from "@/lib/plans";
@@ -12,23 +12,6 @@ interface Me {
   billingEnabled: boolean;
   signedIn: boolean;
   plan?: PlanKey | null;
-}
-
-declare global {
-  interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
-  }
-}
-
-function loadCheckout(): Promise<void> {
-  if (window.Razorpay) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = "https://checkout.razorpay.com/v1/checkout.js";
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error("Couldn't load Razorpay"));
-    document.body.appendChild(s);
-  });
 }
 
 function Check() {
@@ -62,7 +45,6 @@ function useOpenSignIn() {
 
 export default function PricingPlans() {
   const me = useMe();
-  const router = useRouter();
   const params = useSearchParams();
   const wanted = params.get("plan");
   const { isSignedIn, openSignIn } = useOpenSignIn();
@@ -83,27 +65,9 @@ export default function PricingPlans() {
         body: JSON.stringify({ plan }),
       });
       const order = await res.json();
-      if (!res.ok) throw new Error(order.error ?? "Couldn't start checkout");
-      await loadCheckout();
-      const rzp = new window.Razorpay!({
-        key: order.keyId,
-        subscription_id: order.subscriptionId,
-        name: order.name,
-        description: order.description,
-        prefill: order.prefill,
-        theme: { color: "#e8590c" },
-        handler: async (resp: Record<string, string>) => {
-          const v = await fetch("/api/billing/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(resp),
-          });
-          if (v.ok) router.push("/account?welcome=1");
-          else setError((await v.json().catch(() => ({}))).error ?? "Payment could not be verified");
-        },
-        modal: { ondismiss: () => setBusy(null) },
-      });
-      rzp.open();
+      if (!res.ok || !order.url) throw new Error(order.error ?? "Couldn't start checkout");
+      // Dodo's hosted checkout; it sends the buyer back to /account when done.
+      window.location.assign(order.url);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setBusy(null);
@@ -199,9 +163,9 @@ export default function PricingPlans() {
       </div>
       {error && <p className="mt-4 text-sm text-critical">{error}</p>}
       <p className="mt-6 text-sm text-ink-3">
-        Payments are processed securely by Razorpay: UPI, cards, netbanking and wallets. We never see your card or UPI
-        details. Cancel anytime from your account; you keep access until the end of the month you&apos;ve paid for. By
-        subscribing you agree to our{" "}
+        Payments are processed securely by Dodo Payments, our merchant of record, with UPI and cards. We never see your
+        card or UPI details. Cancel anytime from your account; you keep access until the end of the month you&apos;ve
+        paid for. By subscribing you agree to our{" "}
         <Link href="/terms" className="underline">
           Terms
         </Link>{" "}

@@ -28,8 +28,9 @@ export default function PrivacyPage() {
             date and how much of the free allowance you have used.
           </li>
           <li>
-            <strong>Payments, if you subscribe.</strong> Payments are handled entirely by Razorpay. We never see or store card
-            numbers, UPI PINs or bank details. We keep only the Razorpay subscription ID so we can show and cancel your plan.
+            <strong>Payments, if you subscribe.</strong> Payments are handled entirely by Dodo Payments, our merchant of
+            record. We never see or store card numbers, UPI PINs or bank details. We keep only your Dodo customer and
+            subscription IDs so we can show, manage and cancel your plan.
           </li>
           <li>
             <strong>Questions you ask Raay.</strong> When you use Ask Raay, your question and the public reviews are sent to
@@ -47,7 +48,7 @@ export default function PrivacyPage() {
       <section>
         <h2>2. Cookies</h2>
         <p>
-          We use only essential cookies: to keep you signed in (Clerk) and to run checkout (Razorpay). We do not use
+          We use only essential cookies: to keep you signed in (Clerk). Checkout runs on Dodo Payments&apos; own site. We do not use
           advertising cookies, tracking pixels or third-party analytics. App icons are loaded directly from Google Play
           and Apple&apos;s image servers, which, like any website image host, receive your IP address when the image loads.
         </p>
@@ -59,7 +60,7 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Vercel</strong>: hosting and content delivery.</li>
           <li><strong>Clerk</strong>: sign-in and account storage.</li>
-          <li><strong>Razorpay</strong>: payments and subscriptions.</li>
+          <li><strong>Dodo Payments</strong>: payments, subscriptions, invoices and taxes (merchant of record).</li>
           <li><strong>Anthropic</strong>: AI analysis of reviews and Ask Raay answers.</li>
         </ul>
         <p>We may disclose data if required by Indian law or a valid legal order.</p>
@@ -70,7 +71,7 @@ export default function PrivacyPage() {
         <ul>
           <li>Coded usage counters: up to 2 days.</li>
           <li>Account and plan details: until you delete your account.</li>
-          <li>Payment records: kept by Razorpay as required by Indian financial regulations.</li>
+          <li>Payment records: kept by Dodo Payments as required by financial and tax regulations.</li>
           <li>Cached review reports: up to 12 hours (home-page example: up to 14 days).</li>
         </ul>
       </section>
@@ -87,7 +88,7 @@ export default function PrivacyPage() {
       <section>
         <h2>6. Security</h2>
         <p>
-          All traffic is encrypted over HTTPS. Payments are verified with cryptographic signatures from Razorpay, secrets
+          All traffic is encrypted over HTTPS. Payment updates from Dodo Payments are verified with cryptographic signatures, secrets
           are kept only on our servers, and we limit how fast any visitor can use the service to prevent abuse.
         </p>
       </section>

@@ -90,15 +90,16 @@ Open http://localhost:3000 and search for any app.
 | `RAAY_CACHE_HOURS` | No | How long an AI report is reused (default 12) |
 | `NEXT_PUBLIC_CONTACT_URL` | No | Link for the "Talk to us" buttons (hidden when empty) |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` | For accounts | Sign-in with Clerk. Without them the site runs with no accounts |
-| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | For payments | Razorpay subscriptions (plans are auto-created as "Raay Starter" / "Raay Growth") |
-| `RAZORPAY_WEBHOOK_SECRET` | For payments | Verifies Razorpay webhooks at `/api/billing/webhook` (renewals, cancellations) |
+| `DODO_PAYMENTS_API_KEY` | For payments | Dodo Payments subscriptions (products are auto-created as "Raay Starter" / "Raay Growth") |
+| `DODO_PAYMENTS_WEBHOOK_KEY` | For payments | Verifies Dodo webhooks at `/api/billing/webhook` (payments, renewals, cancellations) |
+| `DODO_PAYMENTS_ENVIRONMENT` | For payments | `test_mode` (default) or `live_mode`; must match the API key |
 | `NEXT_PUBLIC_FREE_REPORTS` / `NEXT_PUBLIC_FREE_QUESTIONS` | No | One-time free allowance per account before a paid plan is needed (default 3 / 5) |
 
 ## Free → sign in → subscribe
 
 1. Anyone can view cached reports for free. Fresh AI reports and Ask Raay need a free account (Clerk: Google or email).
 2. Every account gets **3 fresh AI reports and 5 Ask Raay questions, one-time**. The count is kept on the account, so it never resets.
-3. After that, signed-in users see the **plans** and pay with **Razorpay** (UPI, cards, netbanking). The subscription is verified server-side (HMAC signature) and stored on the user's Clerk profile; webhooks keep renewals and cancellations in sync.
+3. After that, signed-in users see the **plans** and pay on **Dodo Payments**' hosted checkout (UPI, cards); Dodo is the merchant of record and handles invoices and taxes. On return, the server reads the subscription from Dodo before switching the plan on, and signed webhooks keep renewals, failed payments and cancellations in sync. Users manage invoices and payment methods in Dodo's customer portal.
 4. Paid plans get monthly quotas (Starter: 150 reports / 1,000 questions; Growth: 600 / 5,000). `/account` shows usage and lets users cancel.
 
 ## Built to handle traffic
@@ -118,7 +119,7 @@ Open http://localhost:3000 and search for any app.
 
 ## Roadmap
 
-- [x] Accounts (Clerk) and Razorpay subscriptions
+- [x] Accounts (Clerk) and Dodo Payments subscriptions
 - [ ] Saved apps per account
 - [ ] Daily refresh with Vercel Cron, plus a review history database
 - [ ] Slack and email weekly digest, plus spike alerts

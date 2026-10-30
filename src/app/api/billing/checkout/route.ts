@@ -1,9 +1,10 @@
 import type { NextRequest } from "next/server";
-import { activePlan, getPlanState, getUserId, setPlanState } from "@/lib/auth";
+import { activePlan, getPlanState, getUserId } from "@/lib/auth";
+import { billingEnabled, customerFor, dodo, productFor } from "@/lib/dodo";
 import { isPlanKey, PLANS } from "@/lib/plans";
-import { billingEnabled, createSubscription, publicKeyId } from "@/lib/razorpay";
 import { overLimit, tooMany } from "@/lib/visitor";
 
+// Starts a Dodo Payments hosted checkout for a plan and returns its URL.
 export async function POST(req: NextRequest) {
   if (!billingEnabled()) return Response.json({ error: "Payments aren't switched on yet." }, { status: 503 });
   const userId = await getUserId();
@@ -17,16 +18,17 @@ export async function POST(req: NextRequest) {
     if (activePlan(state) === plan) {
       return Response.json({ error: `You're already on ${PLANS[plan].name}.` }, { status: 409 });
     }
-    const sub = await createSubscription(plan, userId);
-    // Keep the paid subscription untouched until this one is verified.
-    await setPlanState(userId, { pendingSubscriptionId: sub.id });
-    return Response.json({
-      keyId: publicKeyId(),
-      subscriptionId: sub.id,
-      name: `Raay ${PLANS[plan].name}`,
-      description: `₹${PLANS[plan].price.toLocaleString("en-IN")} / month`,
-      prefill: { email: state.email ?? undefined, name: state.name ?? undefined },
+    if (!state.email) return Response.json({ error: "Add an email address to your account first." }, { status: 400 });
+    const origin = process.env.NEXT_PUBLIC_SITE_URL ?? req.nextUrl.origin;
+    const session = await dodo().checkoutSessions.create({
+      product_cart: [{ product_id: await productFor(plan), quantity: 1 }],
+      customer: { customer_id: await customerFor(userId, state) },
+      // Dodo appends ?subscription_id=…&status=… to this URL after payment.
+      return_url: `${origin}/account`,
+      metadata: { userId, plan },
     });
+    if (!session.checkout_url) throw new Error("no checkout_url");
+    return Response.json({ url: session.checkout_url });
   } catch (err) {
     console.error("[raay] checkout failed:", err);
     return Response.json({ error: "Couldn't start checkout. Please try again." }, { status: 502 });

@@ -1,7 +1,7 @@
 import { activePlan, authEnabled, getPlanState, getUserId } from "@/lib/auth";
 import { usageThisMonth } from "@/lib/entitlements";
 import { FREE_LIMITS, PLANS } from "@/lib/plans";
-import { billingEnabled } from "@/lib/razorpay";
+import { billingEnabled } from "@/lib/dodo";
 
 export async function GET() {
   const base = { authEnabled: authEnabled(), billingEnabled: billingEnabled(), free: FREE_LIMITS };

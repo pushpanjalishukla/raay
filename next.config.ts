@@ -23,12 +23,12 @@ const clerkSources = [clerk, "https://*.clerk.accounts.dev", clerkProtect].filte
 // Next.js needs 'unsafe-inline' for its hydration scripts; React escaping is the main XSS defence.
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} ${clerkSources} https://challenges.cloudflare.com https://checkout.razorpay.com`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} ${clerkSources} https://challenges.cloudflare.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://play-lh.googleusercontent.com https://*.mzstatic.com https://img.clerk.com https://cdn.razorpay.com",
+  "img-src 'self' data: blob: https://play-lh.googleusercontent.com https://*.mzstatic.com https://img.clerk.com",
   "font-src 'self' data:",
-  `connect-src 'self' ${clerkSources} https://clerk-telemetry.com https://api.razorpay.com https://lumberjack.razorpay.com`,
-  `frame-src https://challenges.cloudflare.com ${clerkProtect} https://api.razorpay.com https://checkout.razorpay.com`,
+  `connect-src 'self' ${clerkSources} https://clerk-telemetry.com`,
+  `frame-src https://challenges.cloudflare.com ${clerkProtect}`,
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
@@ -44,9 +44,9 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",
-    value: 'camera=(), microphone=(), geolocation=(), browsing-topics=(), payment=(self "https://api.razorpay.com" "https://checkout.razorpay.com")',
+    value: 'camera=(), microphone=(), geolocation=(), browsing-topics=(), payment=()',
   },
-  // Razorpay checkout and Clerk social sign-in use popups.
+  // Clerk social sign-in uses popups. Checkout is a full redirect to Dodo Payments.
   { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
 ];
 

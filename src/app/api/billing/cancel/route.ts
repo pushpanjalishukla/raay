@@ -1,6 +1,7 @@
 import { getPlanState, getUserId, setPlanState } from "@/lib/auth";
-import { billingEnabled, cancelSubscription } from "@/lib/razorpay";
+import { billingEnabled, dodo } from "@/lib/dodo";
 
+// Cancels at the end of the paid month: access continues until then.
 export async function POST() {
   if (!billingEnabled()) return Response.json({ error: "Payments aren't switched on." }, { status: 503 });
   const userId = await getUserId();
@@ -8,8 +9,7 @@ export async function POST() {
   const state = await getPlanState(userId);
   if (!state.subscriptionId) return Response.json({ error: "No active subscription." }, { status: 400 });
   try {
-    await cancelSubscription(state.subscriptionId);
-    // Access continues until the end of the paid period.
+    await dodo().subscriptions.update(state.subscriptionId, { cancel_at_next_billing_date: true });
     await setPlanState(userId, { status: "cancelled" });
     return Response.json({ ok: true });
   } catch (err) {

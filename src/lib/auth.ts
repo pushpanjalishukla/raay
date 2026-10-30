@@ -18,9 +18,10 @@ export interface PlanState {
   status: string | null;
   /** Unix seconds when the current paid period ends. */
   currentEnd: number | null;
+  /** The Dodo Payments subscription that currently grants the plan. */
   subscriptionId: string | null;
-  /** Created at checkout, promoted to subscriptionId only once payment is verified. */
-  pendingSubscriptionId: string | null;
+  /** Dodo customer per mode ("test_mode" / "live_mode"), created at first checkout. */
+  dodoCustomerIds: Record<string, string>;
   email: string | null;
   name: string | null;
   /** Free allowance used so far. Kept on the account so it never resets. */
@@ -33,6 +34,11 @@ function readFreeUsed(priv: Record<string, unknown>): Record<UsageKind, number> 
   return { report: n(raw.report), question: n(raw.question) };
 }
 
+function readStrings(v: unknown): Record<string, string> {
+  if (!v || typeof v !== "object") return {};
+  return Object.fromEntries(Object.entries(v).filter((e): e is [string, string] => typeof e[1] === "string"));
+}
+
 export async function getPlanState(userId: string): Promise<PlanState> {
   const { clerkClient } = await import("@clerk/nextjs/server");
   const client = await clerkClient();
@@ -43,8 +49,8 @@ export async function getPlanState(userId: string): Promise<PlanState> {
     plan: pub.plan === "starter" || pub.plan === "growth" ? pub.plan : null,
     status: typeof pub.planStatus === "string" ? pub.planStatus : null,
     currentEnd: typeof pub.planCurrentEnd === "number" ? pub.planCurrentEnd : null,
-    subscriptionId: typeof priv.razorpaySubscriptionId === "string" ? priv.razorpaySubscriptionId : null,
-    pendingSubscriptionId: typeof priv.pendingSubscriptionId === "string" ? priv.pendingSubscriptionId : null,
+    subscriptionId: typeof priv.dodoSubscriptionId === "string" ? priv.dodoSubscriptionId : null,
+    dodoCustomerIds: readStrings(priv.dodoCustomerIds),
     email: user.primaryEmailAddress?.emailAddress ?? null,
     name: [user.firstName, user.lastName].filter(Boolean).join(" ") || null,
     freeUsed: readFreeUsed(priv),
@@ -60,14 +66,17 @@ export async function spendFreeCredit(userId: string, kind: UsageKind, used: Rec
   });
 }
 
-/** A plan counts while active, or until the end of a cancelled-but-paid period. */
+/**
+ * A plan counts while paid: active, cancelled-but-paid-through, or briefly while a
+ * renewal is being retried (past due / on hold). Statuses are Dodo Payments' own,
+ * plus "cancelled" for a subscription set to end at its next billing date.
+ */
 export function activePlan(s: PlanState): PlanKey | null {
   if (!s.plan) return null;
   const now = Date.now() / 1000;
   const paidThrough = (s.currentEnd ?? 0) + 2 * 86400; // small grace for renewal webhooks
-  if (s.status === "active" || s.status === "authenticated") return paidThrough > now ? s.plan : null;
-  if (s.status === "cancelled" || s.status === "pending") return paidThrough > now ? s.plan : null;
-  return null;
+  const paid = ["active", "cancelled", "past_due", "on_hold"];
+  return s.status && paid.includes(s.status) && paidThrough > now ? s.plan : null;
 }
 
 export async function setPlanState(
@@ -77,7 +86,7 @@ export async function setPlanState(
     status?: string;
     currentEnd?: number | null;
     subscriptionId?: string;
-    pendingSubscriptionId?: string | null;
+    dodoCustomer?: { mode: string; id: string };
   },
 ) {
   const { clerkClient } = await import("@clerk/nextjs/server");
@@ -87,7 +96,8 @@ export async function setPlanState(
   if (update.status !== undefined) publicMetadata.planStatus = update.status;
   if (update.currentEnd !== undefined) publicMetadata.planCurrentEnd = update.currentEnd;
   const privateMetadata: Record<string, unknown> = {};
-  if (update.subscriptionId) privateMetadata.razorpaySubscriptionId = update.subscriptionId;
-  if (update.pendingSubscriptionId !== undefined) privateMetadata.pendingSubscriptionId = update.pendingSubscriptionId;
+  if (update.subscriptionId) privateMetadata.dodoSubscriptionId = update.subscriptionId;
+  // Clerk deep-merges metadata, so this adds one mode's customer id without dropping the other.
+  if (update.dodoCustomer) privateMetadata.dodoCustomerIds = { [update.dodoCustomer.mode]: update.dodoCustomer.id };
   await client.users.updateUserMetadata(userId, { publicMetadata, privateMetadata });
 }
