@@ -1,3 +1,4 @@
+import { NotFoundError } from "dodopayments";
 import type { NextRequest } from "next/server";
 import { billingEnabled, dodo, syncSubscription } from "@/lib/dodo";
 
@@ -26,7 +27,9 @@ export async function POST(req: NextRequest) {
     await syncSubscription(subscriptionId);
     return Response.json({ ok: true });
   } catch (err) {
-    // A 5xx makes Dodo retry the event later.
+    // Unknown subscription (e.g. a dashboard test event): nothing to sync, don't retry.
+    if (err instanceof NotFoundError) return Response.json({ ok: true, skipped: "unknown subscription" });
+    // Any other failure: a 5xx makes Dodo retry the event later.
     console.error("[raay] webhook sync failed:", err);
     return Response.json({ error: "Sync failed" }, { status: 500 });
   }
