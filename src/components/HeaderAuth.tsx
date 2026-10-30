@@ -11,7 +11,7 @@ function SignedOutLinks() {
         Sign in
       </Link>
       <Link
-        href="/sign-in"
+        href="/sign-up"
         className="h-9 px-4 inline-flex items-center rounded-full bg-ink text-bg text-sm font-medium hover:opacity-90"
       >
         Try free

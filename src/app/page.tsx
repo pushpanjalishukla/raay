@@ -268,7 +268,7 @@ export default function Home() {
             <h2 className="text-3xl sm:text-[2.6rem] leading-[1.1] font-semibold tracking-[-0.03em]">See what your users are saying</h2>
             <p className="mt-3 opacity-75">Pick any app. Your first report is free and ready in about 20 seconds.</p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link href="/sign-in" className="h-12 px-7 inline-flex items-center rounded-full bg-accent text-accent-ink text-sm font-semibold">
+              <Link href="/sign-up" className="h-12 px-7 inline-flex items-center rounded-full bg-accent text-accent-ink text-sm font-semibold">
                 Try Raay free
               </Link>
               <Link href="/app/play/com.zeptoconsumerapp" className="h-12 px-7 inline-flex items-center rounded-full border border-bg/25 text-sm">

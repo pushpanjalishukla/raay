@@ -14,7 +14,10 @@ function clerkHost(): string | null {
 
 const isDev = process.env.NODE_ENV !== "production";
 const clerk = clerkHost();
-const clerkSources = [clerk, "https://*.clerk.accounts.dev"].filter(Boolean).join(" ");
+// Clerk Protect's device check loads from cdn.protect.clerk.com and reports to <id>.client.protect.clerk.com;
+// if either is blocked, Protect rejects every browser sign-up as suspicious.
+const clerkProtect = "https://*.protect.clerk.com";
+const clerkSources = [clerk, "https://*.clerk.accounts.dev", clerkProtect].filter(Boolean).join(" ");
 
 // Allow-list of where the browser may load code, frames and data from.
 // Next.js needs 'unsafe-inline' for its hydration scripts; React escaping is the main XSS defence.
@@ -25,7 +28,7 @@ const csp = [
   "img-src 'self' data: blob: https://play-lh.googleusercontent.com https://*.mzstatic.com https://img.clerk.com https://cdn.razorpay.com",
   "font-src 'self' data:",
   `connect-src 'self' ${clerkSources} https://clerk-telemetry.com https://api.razorpay.com https://lumberjack.razorpay.com`,
-  "frame-src https://challenges.cloudflare.com https://api.razorpay.com https://checkout.razorpay.com",
+  `frame-src https://challenges.cloudflare.com ${clerkProtect} https://api.razorpay.com https://checkout.razorpay.com`,
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
