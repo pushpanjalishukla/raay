@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogoMark } from "./Logo";
+import { LogoTile } from "./Logo";
 import { FREE_LIMITS } from "@/lib/plans";
 
 const POINTS = [
@@ -13,7 +13,7 @@ export default function AuthShell({ title, children }: { title: string; children
   return (
     <div className="mx-auto max-w-6xl px-4 py-14 sm:py-20 grid gap-12 lg:grid-cols-2 items-center">
       <div>
-        <LogoMark size={44} />
+        <LogoTile size={48} />
         <h1 className="mt-6 text-4xl sm:text-5xl font-semibold tracking-tight">{title}</h1>
         <p className="mt-4 text-lg text-ink-2 max-w-md">
           One click with Google and you&apos;re in. Raay turns your app&apos;s reviews into what to fix next.

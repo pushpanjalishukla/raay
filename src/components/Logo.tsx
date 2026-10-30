@@ -1,34 +1,40 @@
-import { useId } from "react";
-
 /**
- * Raay mark: a speech bubble (an opinion, "राय") holding three rising bars
- * (the insight Raay pulls out of it), on the brand gradient.
+ * Raay mark: an eye drawn as a speech bubble. Users speak (राय, "opinion"),
+ * Raay sees what they mean. One ink colour plus the brand orange.
  */
-export function LogoMark({ size = 28, className = "" }: { size?: number; className?: string }) {
-  const id = useId().replace(/:/g, "");
+export const RAAY_ORANGE = "#FF5A1F";
+export const RAAY_EYE =
+  "M10 32A25.1 25.1 0 0 1 54 32A25.1 25.1 0 0 1 24.5 43.87L10.5 51L15.5 38.83A25.1 25.1 0 0 1 10 32Z" +
+  "M42.6 32A10.6 10.6 0 1 0 21.4 32A10.6 10.6 0 1 0 42.6 32Z";
+
+/** The bare mark in the current text colour. `size` is its height in px. */
+export function LogoMark({ size = 24, className = "" }: { size?: number; className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" className={className} aria-hidden>
-      <defs>
-        <linearGradient id={`rg${id}`} x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#ff7a2e" />
-          <stop offset="1" stopColor="#e0336e" />
-        </linearGradient>
-      </defs>
-      <rect width="32" height="32" rx="9" fill={`url(#rg${id})`} />
-      <rect x="6.5" y="7.5" width="19" height="13.5" rx="4.2" fill="#fff" />
-      <path d="M10.2 20.2 L10.2 25.2 L15.4 20.6 Z" fill="#fff" />
-      <rect x="10.6" y="14.6" width="2.6" height="3.6" rx="1.3" fill={`url(#rg${id})`} />
-      <rect x="14.7" y="12.4" width="2.6" height="5.8" rx="1.3" fill={`url(#rg${id})`} />
-      <rect x="18.8" y="10.2" width="2.6" height="8" rx="1.3" fill={`url(#rg${id})`} />
+    <svg height={size} width={(size * 48) / 38} viewBox="8 16 48 38" className={className} aria-hidden>
+      <path d={RAAY_EYE} fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <circle cx="32" cy="32" r="5.2" fill={RAAY_ORANGE} />
     </svg>
   );
 }
 
-export default function Logo({ size = 28 }: { size?: number }) {
+/** The mark on a dark rounded tile, for app-icon style placements. */
+export function LogoTile({ size = 44, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" className={className} aria-hidden>
+      <rect width="64" height="64" rx="15" fill="#121211" />
+      <g transform="translate(-3.84 -7.2) scale(1.12)">
+        <path d={RAAY_EYE} fill="#F2EFE9" stroke="#F2EFE9" strokeWidth="2" strokeLinejoin="round" />
+        <circle cx="32" cy="32" r="5.2" fill={RAAY_ORANGE} />
+      </g>
+    </svg>
+  );
+}
+
+export default function Logo() {
   return (
     <span className="inline-flex items-center gap-2">
-      <LogoMark size={size} />
-      <span className="text-[19px] font-semibold tracking-[-0.04em] leading-none">raay</span>
+      <LogoMark size={21} />
+      <span className="text-[21px] font-semibold tracking-[-0.045em] leading-none -mt-0.5">raay</span>
     </span>
   );
 }

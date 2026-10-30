@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #fcfcfb;
+  --bg: #f8f7f4;
   --surface: #ffffff;
   --surface-2: #f4f3ef;
   --border: #e6e4dd;
@@ -66,6 +66,7 @@
   --color-warning-ink: var(--warning-ink);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
 }
 
 body {
@@ -160,4 +161,10 @@ body {
 .anim-grow-x { transform-origin: left; animation: grow-x 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 @media (prefers-reduced-motion: reduce) {
   .anim-grow-x { animation: none !important; }
+}
+
+/* Product screenshots fade into the page instead of ending on a hard edge. */
+.frame-fade {
+  -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 98%);
+  mask-image: linear-gradient(to bottom, #000 62%, transparent 98%);
 }
