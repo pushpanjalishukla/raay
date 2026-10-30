@@ -1,6 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import HeaderAuth from "@/components/HeaderAuth";
 import BrandLogo from "@/components/Logo";
@@ -10,7 +10,6 @@ import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
-const serif = Instrument_Serif({ variable: "--font-instrument-serif", weight: "400", style: ["normal", "italic"], subsets: ["latin"] });
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
@@ -42,7 +41,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <nav className="mx-auto max-w-6xl px-4 h-16 flex items-center gap-8">
           <Logo />
           <div className="hidden md:flex items-center gap-6 text-sm text-ink-2">
-            <Link href="/#tour" className="hover:text-ink">Product</Link>
+            <Link href="/#features" className="hover:text-ink">Features</Link>
             <Link href="/#how" className="hover:text-ink">How it works</Link>
             <Link href="/pulse" className="hover:text-ink">App Pulse</Link>
             <Link href="/compare" className="hover:text-ink">Compare</Link>
@@ -69,7 +68,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           <div className="text-sm">
             <p className="font-medium">Product</p>
             <ul className="mt-3 space-y-2 text-ink-2">
-              <li><Link href="/#tour" className="hover:text-ink">Product</Link></li>
+              <li><Link href="/#features" className="hover:text-ink">Features</Link></li>
               <li><Link href="/pulse" className="hover:text-ink">India App Pulse</Link></li>
               <li><Link href="/compare" className="hover:text-ink">Compare apps</Link></li>
               <li><Link href="/pricing" className="hover:text-ink">Pricing</Link></li>
@@ -99,7 +98,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${serif.variable} h-full antialiased`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         {AUTH_ON ? (
           <ClerkProvider
