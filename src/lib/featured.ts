@@ -5,6 +5,7 @@ import { sharedCache } from "./counters";
 import { detectLang } from "./lexicon";
 import { clean } from "./claude";
 import { churnSignals, fixTracker, ratingWaterfall } from "./deep";
+import baked from "../data/featured-snapshot.json";
 import type { Analysis, LabeledReview } from "./types";
 
 export const FEATURED = { store: "play" as const, id: "com.zeptoconsumerapp", name: "Zepto" };
@@ -45,7 +46,10 @@ function pickReviews(reviews: LabeledReview[]): LabeledReview[] {
       !/\.\.\.|समीक्षा|review here/i.test(r.text) &&
       // Only show reviews whose language label is unambiguous at a glance.
       (detectLang(r.text) === r.lang || (r.lang === "hindi" && detectLang(r.text) === "marathi")) &&
-      !(r.lang === "english" && HINGLISH_HINT.test(r.text)),
+      !(r.lang === "english" && HINGLISH_HINT.test(r.text)) &&
+      // Stars must agree with the words (a 5★ "worst app" review confuses readers).
+      !(r.sentiment === "negative" && r.rating >= 4) &&
+      !(r.sentiment === "positive" && r.rating <= 2),
   );
   const picked: LabeledReview[] = [];
   const take = (pred: (r: LabeledReview) => boolean) => {
@@ -90,7 +94,7 @@ export function buildSnapshot(a: Analysis, name: string): FeaturedSnapshot {
       actual: wf.actual,
       potential: wf.potential,
       steps: wf.steps
-        .filter((s) => s.category !== "other" && s.category !== "rest")
+        .filter((s) => s.category !== "other" && s.category !== "rest" && s.category !== "trust_fraud")
         .slice(0, 4)
         .map((s) => ({ short: s.short, label: s.label, delta: s.delta })),
     },
@@ -126,7 +130,11 @@ export function buildSnapshot(a: Analysis, name: string): FeaturedSnapshot {
 
 const SNAP_KEY = `featured:v1:${FEATURED.store}:${FEATURED.id}`;
 
-/** Latest real snapshot: from the cached AI report if present, else the last saved one (kept 14 days). */
+/**
+ * Latest real snapshot: from the cached AI report if present, else the last saved one,
+ * else the snapshot baked into the code (src/data/featured-snapshot.json) so the
+ * home page always shows a real, dated report even after cache evictions.
+ */
 export async function getFeatured(): Promise<FeaturedSnapshot | null> {
   const cache = sharedCache();
   const report = (await cache.get(`analysis:v2:${FEATURED.store}:${FEATURED.id}`).catch(() => null)) as Analysis | null;
@@ -135,5 +143,5 @@ export async function getFeatured(): Promise<FeaturedSnapshot | null> {
     await cache.set(SNAP_KEY, snap, { ttl: 14 * 86400, name: "raay-featured" }).catch(() => {});
     return snap;
   }
-  return ((await cache.get(SNAP_KEY).catch(() => null)) as FeaturedSnapshot | null) ?? null;
+  return ((await cache.get(SNAP_KEY).catch(() => null)) as FeaturedSnapshot | null) ?? (baked as FeaturedSnapshot);
 }

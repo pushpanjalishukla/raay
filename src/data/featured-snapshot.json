@@ -1,0 +1,90 @@
+{
+  "app": {
+    "id": "com.zeptoconsumerapp",
+    "store": "play",
+    "name": "Zepto",
+    "title": "Zepto: Groceries in minutes",
+    "icon": "https://play-lh.googleusercontent.com/jrtmMFv4qjtgMPQeaQzUFZ3EYBkHd_8OFYl6O1Ngt5Pey52RJAR4u8K4IoPILkJz76a7s5U3DNaY3r3xnl7t8X4"
+  },
+  "generatedAt": "2026-10-30T10:00:29.368Z",
+  "total": 260,
+  "kpis": {
+    "negative": 0.34615384615384615,
+    "recent": 3.5076923076923077,
+    "churn": 6
+  },
+  "waterfall": {
+    "actual": 3.5076923076923077,
+    "potential": 4.916783216783217,
+    "steps": [
+      {
+        "short": "Delivery",
+        "label": "Orders & delivery",
+        "delta": 0.5572427572427574
+      },
+      {
+        "short": "Payments",
+        "label": "Payments & refunds",
+        "delta": 0.15084915084915082
+      },
+      {
+        "short": "Support",
+        "label": "Customer support",
+        "delta": 0.13576423576423574
+      }
+    ]
+  },
+  "reviews": [
+    {
+      "lang": "Hinglish",
+      "stars": 1,
+      "text": "is aap return kar ne ka option nahi de raha hai bhai please help me",
+      "gist": "App not showing return option for order",
+      "topic": "UX & design",
+      "positive": false
+    },
+    {
+      "lang": "English",
+      "stars": 1,
+      "text": "worst app payments dont work",
+      "gist": "Payments don't work",
+      "topic": "Payments & refunds",
+      "positive": false
+    },
+    {
+      "lang": "English",
+      "stars": 5,
+      "text": "quick delivery and service very nice",
+      "gist": "",
+      "topic": "Praise",
+      "positive": true
+    },
+    {
+      "lang": "Hindi",
+      "stars": 5,
+      "text": "zepto जैसा app मैंने आज तक कभी नहीं देखा है",
+      "gist": "",
+      "topic": "Praise",
+      "positive": true
+    }
+  ],
+  "fix": {
+    "title": "Expired, rotten and damaged items, with claims denied",
+    "detail": "Users report expired paneer (expired 25 Oct, delivered 28 Oct) that left 3 family members with stomach aches.…",
+    "action": "Auto-approve refunds or replacements for photo-verified expiry or damage claims under a set ₹ threshold. Run an urgent…"
+  },
+  "callouts": {
+    "spike": {
+      "title": "Getting worse in v26.10.3",
+      "sub": "Orders & delivery"
+    },
+    "churn": {
+      "title": "6 users say they're leaving",
+      "sub": "Rivals named: Blinkit, Instamart"
+    },
+    "reply": {
+      "title": "Reply drafted in English",
+      "sub": "“We're truly sorry your family…”"
+    }
+  }
+}
