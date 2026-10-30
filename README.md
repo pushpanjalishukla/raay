@@ -4,7 +4,7 @@
 
 **App review intelligence for Indian apps.** Raay reads every Google Play and App Store review of your app and your competitors' (in English, Hinglish, Hindi, Tamil, Marathi and more) and turns them into the problems your team should fix this week. It flags bad releases and drafts replies in each user's own language.
 
-**Live demo:** https://raay-chi.vercel.app · try [Zepto](https://raay-chi.vercel.app/app/play/com.zeptoconsumerapp) or [Zepto vs Blinkit vs BigBasket](https://raay-chi.vercel.app/compare?apps=play:com.zeptoconsumerapp,play:com.grofers.customerapp,play:com.bigbasket.mobileapp)
+**Live demo:** https://raay.pushpanjali.fun · try [Zepto](https://raay.pushpanjali.fun/app/play/com.zeptoconsumerapp) or [Zepto vs Blinkit vs BigBasket](https://raay.pushpanjali.fun/compare?apps=play:com.zeptoconsumerapp,play:com.grofers.customerapp,play:com.bigbasket.mobileapp)
 
 ![Raay landing page](docs/hero.jpg)
 
@@ -28,7 +28,7 @@ Raay fetches the data itself, labels every review, tracks complaint rates per re
 - **Release health.** Negative-review share per app version, with automatic spike detection.
 - **Reply drafts** in the reviewer's own language and script (Hinglish to Hinglish, Hindi to Hindi).
 - **Competitor comparison.** A heat table of complaint mix across up to 4 apps.
-- **India App Pulse.** A live, sortable leaderboard of 18 popular Indian apps (Zepto, Blinkit, PhonePe, Paytm, Amazon, Swiggy, Ola…) ranked by the share of unhappy reviews, refreshed every 6 hours at no AI cost. See [/pulse](https://raay-chi.vercel.app/pulse).
+- **India App Pulse.** A live, sortable leaderboard of 18 popular Indian apps (Zepto, Blinkit, PhonePe, Paytm, Amazon, Swiggy, Ola…) ranked by the share of unhappy reviews, refreshed every 6 hours at no AI cost. See [/pulse](https://raay.pushpanjali.fun/pulse).
 - **Ask Raay (AI chat).** Ask anything about an app's reviews ("Why are people angry about refunds?") and get an answer backed by the exact reviews, plus follow-up questions.
 - **Where your stars go.** A rating-impact waterfall showing how much each problem costs you in stars, and how much rating is left on the table.
 - **Churn & rivals.** Spots users who say they'll uninstall or switch, and which competitors they name (Blinkit, PhonePe, Swiggy…), with the quotes.

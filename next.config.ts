@@ -59,6 +59,17 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.mzstatic.com" },
     ],
   },
+  async redirects() {
+    return [
+      {
+        // The old Vercel address forwards to Raay's own domain, where production sign-in works.
+        source: "/:path*",
+        has: [{ type: "host", value: "raay-chi.vercel.app" }],
+        destination: "https://raay.pushpanjali.fun/:path*",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

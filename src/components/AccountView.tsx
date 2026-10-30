@@ -243,7 +243,7 @@ function Account() {
                 </ul>
                 <Link
                   href={`/pricing?plan=${next}`}
-                  className="mt-6 h-11 inline-flex items-center justify-center rounded-lg bg-ink text-bg text-sm font-medium hover:opacity-90"
+                  className="mt-6 h-11 inline-flex items-center justify-center rounded-lg bg-accent text-accent-ink text-sm font-semibold hover:opacity-90"
                 >
                   Get {PLANS[next].name}
                 </Link>
