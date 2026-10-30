@@ -4,7 +4,7 @@ import AppSearch from "@/components/AppSearch";
 import FeatureBento from "@/components/FeatureBento";
 import LivePill from "@/components/LivePill";
 import PricingPlans from "@/components/PricingPlans";
-import PulseCards from "@/components/PulseCards";
+import PulseRanking from "@/components/PulseRanking";
 import Showcase from "@/components/Showcase";
 import { SAMPLE_APPS, SAMPLE_COMPARE } from "@/lib/config";
 import { FREE_LIMITS } from "@/lib/plans";
@@ -176,12 +176,12 @@ export default function Home() {
       <section id="pulse" className="border-y border-border bg-surface/60 scroll-mt-16">
         <div className="mx-auto max-w-6xl px-4 py-24">
           <SectionHead
-            eyebrow="India App Pulse · updated every 6 hours"
+            eyebrow="India App Pulse"
             title="How happy are users with India's top apps?"
-            sub="Raay tracks 18 popular apps. These are the six whose users are least happy right now."
+            sub="Raay checks 18 popular Indian apps every 6 hours. These six have the most unhappy reviews right now."
           />
-          <div className="mt-14 reveal">
-            <PulseCards limit={6} controls={false} />
+          <div className="mt-14 mx-auto max-w-4xl reveal">
+            <PulseRanking limit={6} />
           </div>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link href="/pulse" className="h-11 px-6 inline-flex items-center rounded-full bg-ink text-bg text-sm font-medium hover:opacity-90">

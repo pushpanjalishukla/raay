@@ -42,6 +42,18 @@ function Bone({ className }: { className: string }) {
   return <span className={`block rounded-md bg-surface-2 animate-pulse ${className}`} />;
 }
 
+/** Prefer one review per language, so the left side shows the mix Raay reads. */
+function pick(reviews: FeaturedSnapshot["reviews"]) {
+  const first = reviews.filter((r, i) => reviews.findIndex((x) => x.lang === r.lang) === i);
+  return [...first, ...reviews.filter((r) => !first.includes(r))].slice(0, 3);
+}
+
+/** The fix action up to its first full stop, so the card never ends mid-sentence. */
+function firstSentence(s: string) {
+  const m = s.match(/^.+?[.!?](?=\s|$)/);
+  return m ? m[0] : s;
+}
+
 export default function Showcase() {
   const [state, setState] = useState<{ snap: FeaturedSnapshot; live: boolean } | null>(null);
   useEffect(() => {
@@ -57,8 +69,7 @@ export default function Showcase() {
     ? new Date(snap.generatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
     : "";
   const href = live && snap ? `/app/${snap.app.store}/${snap.app.id}` : "/app/play/com.zeptoconsumerapp";
-  const drags = (snap?.waterfall.steps ?? []).slice(0, 3);
-  const maxDrag = Math.max(0.01, ...drags.map((d) => d.delta));
+  const top = snap?.waterfall.steps[0];
 
   return (
     <div>
@@ -112,82 +123,65 @@ export default function Showcase() {
             →
           </span>
 
-          {/* Left: raw reviews */}
+          {/* Left: what users wrote, as the messages they are */}
           <div className="p-6 sm:p-8 lg:pr-12 lg:border-r border-border">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-3">What users wrote</p>
-            <ul className="mt-5 space-y-4">
+            <p className="text-sm font-medium text-ink-3">What users wrote</p>
+            <ul className="mt-5 space-y-3">
               {snap
-                ? snap.reviews.slice(0, 3).map((r, i) => (
-                    <li key={i}>
-                      <div className="flex items-center gap-2">
+                ? pick(snap.reviews).map((r, i) => (
+                    <li key={i} className="max-w-[92%] rounded-2xl rounded-bl-md bg-surface-2 px-4 py-3">
+                      <div className="flex items-center gap-2 text-xs text-ink-3">
                         <Stars n={r.stars} />
-                        <span className="text-[11px] rounded-full bg-surface-2 px-2 py-0.5 text-ink-2">{r.lang}</span>
+                        <span>{r.lang}</span>
                       </div>
-                      <p className="mt-1.5 text-[15px] leading-relaxed">“{r.text}”</p>
+                      <p className="mt-1 text-[15px] leading-snug">“{r.text}”</p>
                       {r.gist && r.lang !== "English" && (
-                        <p className="mt-1 text-sm text-ink-3">Raay reads: {r.gist}</p>
+                        <p className="mt-1.5 text-sm text-ink-3">Raay reads: {r.gist}</p>
                       )}
                     </li>
                   ))
                 : Array.from({ length: 3 }, (_, i) => (
-                    <li key={i} className="space-y-2">
+                    <li key={i} className="rounded-2xl bg-surface-2/60 px-4 py-3 space-y-2">
                       <Bone className="h-3 w-24" />
                       <Bone className="h-4 w-full" />
-                      <Bone className="h-3 w-2/3" />
                     </li>
                   ))}
             </ul>
           </div>
 
-          {/* Right: what Raay tells you */}
-          <div className="p-6 sm:p-8 lg:pl-12 bg-surface-2/40 border-t lg:border-t-0 border-border">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-3">What Raay tells you</p>
-            <div className="mt-5 grid grid-cols-3 gap-3">
-              {[
-                ["Unhappy", snap ? `${Math.round(snap.kpis.negative * 100)}%` : ""],
-                ["Recent rating", snap ? `★ ${snap.kpis.recent.toFixed(1)}` : ""],
-                ["Ready to leave", snap ? String(snap.kpis.churn) : ""],
-              ].map(([k, v]) => (
-                <div key={k} className="rounded-xl bg-surface border border-border px-3.5 py-3">
-                  <p className="text-xs text-ink-3">{k}</p>
-                  {v ? <p className="mt-0.5 text-xl font-semibold tabular">{v}</p> : <Bone className="h-6 w-12 mt-1" />}
-                </div>
-              ))}
+          {/* Right: one finding and one action, nothing else */}
+          <div className="p-6 sm:p-8 lg:pl-12 bg-surface-2/40 border-t lg:border-t-0 border-border flex flex-col">
+            <p className="text-sm font-medium text-ink-3">What Raay tells you</p>
+            <div className="mt-5">
+              <p className="text-sm text-ink-2">Biggest drag on the rating</p>
+              {top ? (
+                <p className="mt-1 text-2xl font-semibold tracking-tight">
+                  {top.label ?? top.short} <span className="text-critical tabular">−{top.delta.toFixed(2)}★</span>
+                </p>
+              ) : (
+                <Bone className="h-7 w-64 mt-2" />
+              )}
+              {snap ? (
+                <p className="mt-2 text-sm text-ink-2">
+                  {Math.round(snap.kpis.negative * 100)}% of recent reviews are unhappy · {snap.kpis.churn} users say
+                  they&apos;re leaving
+                </p>
+              ) : (
+                <Bone className="h-3 w-72 mt-3" />
+              )}
             </div>
 
-            <p className="mt-6 text-sm font-medium">Biggest drags on the rating</p>
-            <ul className="mt-3 space-y-2.5">
-              {(snap ? drags : [0, 1, 2]).map((d, i) =>
-                typeof d === "number" ? (
-                  <li key={i}>
-                    <Bone className="h-4 w-full" />
-                  </li>
-                ) : (
-                  <li key={d.short} className="grid grid-cols-[8.5rem_1fr_3.5rem] items-center gap-3 text-sm">
-                    <span className="truncate text-ink-2">{d.label ?? d.short}</span>
-                    <span className="h-2 rounded-full bg-surface overflow-hidden border border-border">
-                      <span
-                        className="block h-full rounded-full bg-[var(--neg)]"
-                        style={{ width: `${(d.delta / maxDrag) * 100}%` }}
-                      />
-                    </span>
-                    <span className="text-right tabular font-medium">−{d.delta.toFixed(2)}★</span>
-                  </li>
-                ),
-              )}
-            </ul>
-
-            <div className="mt-6 rounded-xl border border-accent/30 bg-surface p-4">
+            <div className="mt-6 rounded-2xl bg-ink text-bg p-5 sm:p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-accent">Do this first</p>
               {snap?.fix ? (
                 <>
-                  <p className="mt-1.5 font-semibold leading-snug">{snap.fix.title}</p>
-                  <p className="mt-1 text-sm text-ink-2 leading-relaxed">{snap.fix.action}</p>
+                  <p className="mt-2 text-lg font-semibold leading-snug">{snap.fix.title}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed opacity-75">{firstSentence(snap.fix.action)}</p>
                 </>
               ) : (
                 <>
-                  <Bone className="h-4 w-3/4 mt-2" />
-                  <Bone className="h-3 w-full mt-2" />
+                  <span className="block h-5 w-3/4 mt-2 rounded-md bg-bg/15" />
+                  <span className="block h-3 w-full mt-2 rounded-md bg-bg/15" />
                 </>
               )}
             </div>
