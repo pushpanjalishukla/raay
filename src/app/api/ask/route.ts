@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { checkAllowance } from "@/lib/entitlements";
 import { aiEnabled, askWithClaude } from "@/lib/claude";
+import { FREE_LIMITS } from "@/lib/plans";
 import { fetchAppCached } from "@/lib/stores";
 import { overLimit, tooMany, tryAcquire, validAppRef, visitorId } from "@/lib/visitor";
 
@@ -25,10 +26,10 @@ export async function POST(req: NextRequest) {
   const allowance = await checkAllowance("question", ip);
   if (!allowance.ok) {
     const message = {
-      login: "You've used today's free questions. Sign in to keep asking.",
-      upgrade: "You've used today's free questions. Pick a plan to keep asking.",
+      login: `Sign in to ask Raay. Every account gets ${FREE_LIMITS.question} free questions.`,
+      upgrade: `You've used your ${FREE_LIMITS.question} free questions. Pick a plan to keep asking.`,
       quota: "You've used this month's questions on your plan. Upgrade to keep asking.",
-      busy: "Today's free questions are used up. Please come back tomorrow.",
+      busy: "Free questions are at capacity right now. Please try again later.",
     }[allowance.gate];
     return Response.json({ error: message, gate: allowance.gate }, { status: 402 });
   }

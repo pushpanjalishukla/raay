@@ -1,7 +1,7 @@
-// Who may spend AI budget right now: free daily allowance, then sign-in, then a paid plan.
+// Who may spend AI budget right now: a paid plan's monthly quota, or the account's one-time free allowance.
 import { bump, sharedCache } from "./counters";
 import { localBump } from "./visitor";
-import { activePlan, authEnabled, getPlanState, getUserId } from "./auth";
+import { activePlan, authEnabled, getPlanState, getUserId, spendFreeCredit } from "./auth";
 import { FREE_LIMITS, PLANS, type PlanKey } from "./plans";
 
 export type Gate = "login" | "upgrade" | "quota" | "busy";
@@ -17,28 +17,38 @@ const month = () => new Date().toISOString().slice(0, 7);
 
 export type Allowance = { ok: true; plan: PlanKey | null } | { ok: false; gate: Gate };
 
+/** Counts one use per visitor per day; true once the visitor is past `max`. */
+async function overDaily(key: string, max: number): Promise<boolean> {
+  return localBump(key) > max || (await bump(key, 2 * 86400)) > max;
+}
+
 export async function checkAllowance(kind: Kind, ip: string): Promise<Allowance> {
   const userId = await getUserId().catch(() => null);
 
-  if (userId) {
-    const plan = activePlan(await getPlanState(userId));
-    if (plan) {
-      const used = await bump(`paid:${userId}:${kind}:${month()}`, 40 * 86400);
-      return used > PLANS[plan].limits[kind] ? { ok: false, gate: "quota" } : { ok: true, plan };
-    }
+  if (!userId) {
+    // The free allowance belongs to an account, so visitors sign in first.
+    if (authEnabled()) return { ok: false, gate: "login" };
+    // Without accounts (local development) there is nowhere to keep a lifetime count.
+    return (await overDaily(`free-ip:${ip}:${kind}:${day()}`, FREE_LIMITS[kind])) ? { ok: false, gate: "busy" } : { ok: true, plan: null };
   }
 
-  // Free usage is counted per IP (and per account when signed in), so signing
-  // in alone doesn't reset the allowance; it leads to the plans.
-  const ipKey = `free-ip:${ip}:${kind}:${day()}`;
-  const blocked = localBump(ipKey) > FREE_LIMITS[kind] || (await bump(ipKey, 2 * 86400)) > FREE_LIMITS[kind];
-  const blockedUser = userId ? (await bump(`free-user:${userId}:${kind}:${day()}`, 2 * 86400)) > FREE_LIMITS[kind] : false;
-  const globalKey = `free-all:${kind}:${day()}`;
-  const globalBlocked =
-    localBump(globalKey) > GLOBAL_FREE_PER_DAY[kind] || (await bump(globalKey, 2 * 86400)) > GLOBAL_FREE_PER_DAY[kind];
-  if (!blocked && !blockedUser && !globalBlocked) return { ok: true, plan: null };
-  if (!authEnabled()) return { ok: false, gate: "busy" };
-  return { ok: false, gate: userId ? "upgrade" : "login" };
+  const state = await getPlanState(userId);
+  const plan = activePlan(state);
+  if (plan) {
+    const used = await bump(`paid:${userId}:${kind}:${month()}`, 40 * 86400);
+    return used > PLANS[plan].limits[kind] ? { ok: false, gate: "quota" } : { ok: true, plan };
+  }
+
+  if (state.freeUsed[kind] >= FREE_LIMITS[kind]) return { ok: false, gate: "upgrade" };
+  // Guards against one person farming free accounts, and against a site-wide spike in AI cost.
+  if (
+    (await overDaily(`free-ip:${ip}:${kind}:${day()}`, FREE_LIMITS[kind])) ||
+    (await overDaily(`free-all:${kind}:${day()}`, GLOBAL_FREE_PER_DAY[kind]))
+  ) {
+    return { ok: false, gate: "busy" };
+  }
+  await spendFreeCredit(userId, kind, state.freeUsed);
+  return { ok: true, plan: null };
 }
 
 export async function usageThisMonth(userId: string) {

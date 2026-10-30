@@ -74,7 +74,7 @@ const FAQ = [
   },
   {
     q: "What counts as a free report?",
-    a: `You get ${FREE_LIMITS.report} fresh AI reports and ${FREE_LIMITS.question} Ask Raay questions a day for free. Reports someone already generated in the last few hours are free to view any time.`,
+    a: `Every account gets ${FREE_LIMITS.report} fresh AI reports and ${FREE_LIMITS.question} Ask Raay questions for free. After that, the Starter or Growth plan keeps them coming. Reports someone already generated in the last few hours are free to view any time.`,
   },
   {
     q: "How fresh is the data?",
@@ -127,7 +127,7 @@ export default function Home() {
             ))}
           </div>
           <p className="mt-5 text-sm text-ink-3">
-            Free to start · {FREE_LIMITS.report} AI reports a day · No card needed
+            Free to start · {FREE_LIMITS.report} free AI reports · No card needed
           </p>
         </div>
 

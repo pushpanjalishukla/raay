@@ -1,6 +1,8 @@
 // Sign-in is optional: until Clerk keys are configured the site runs without accounts.
 import type { PlanKey } from "./plans";
 
+export type UsageKind = "report" | "question";
+
 export const authEnabled = () =>
   Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
 
@@ -21,6 +23,14 @@ export interface PlanState {
   pendingSubscriptionId: string | null;
   email: string | null;
   name: string | null;
+  /** Free allowance used so far. Kept on the account so it never resets. */
+  freeUsed: Record<UsageKind, number>;
+}
+
+function readFreeUsed(priv: Record<string, unknown>): Record<UsageKind, number> {
+  const raw = (priv.freeUsed ?? {}) as Record<string, unknown>;
+  const n = (v: unknown) => (typeof v === "number" && v > 0 ? Math.floor(v) : 0);
+  return { report: n(raw.report), question: n(raw.question) };
 }
 
 export async function getPlanState(userId: string): Promise<PlanState> {
@@ -37,7 +47,17 @@ export async function getPlanState(userId: string): Promise<PlanState> {
     pendingSubscriptionId: typeof priv.pendingSubscriptionId === "string" ? priv.pendingSubscriptionId : null,
     email: user.primaryEmailAddress?.emailAddress ?? null,
     name: [user.firstName, user.lastName].filter(Boolean).join(" ") || null,
+    freeUsed: readFreeUsed(priv),
   };
+}
+
+/** Records one use of the account's free allowance. */
+export async function spendFreeCredit(userId: string, kind: UsageKind, used: Record<UsageKind, number>) {
+  const { clerkClient } = await import("@clerk/nextjs/server");
+  const client = await clerkClient();
+  await client.users.updateUserMetadata(userId, {
+    privateMetadata: { freeUsed: { ...used, [kind]: used[kind] + 1 } },
+  });
 }
 
 /** A plan counts while active, or until the end of a cancelled-but-paid period. */

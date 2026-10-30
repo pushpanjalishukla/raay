@@ -10,12 +10,12 @@ type Gate = "login" | "upgrade" | "quota" | "busy";
 
 const COPY: Record<Exclude<Gate, "busy">, { title: (what: string, n: number) => string; body: string }> = {
   login: {
-    title: (what, n) => `You've used your ${n} free AI ${what} for today`,
-    body: "Sign in to continue. Raay reports for popular apps stay free to view, and paid plans unlock fresh AI reports for any app.",
+    title: (what, n) => `Sign in to get your ${n} free AI ${what}`,
+    body: `Every account gets ${FREE_LIMITS.report} free AI reports and ${FREE_LIMITS.question} Ask Raay questions. Reports for popular apps stay free to view.`,
   },
   upgrade: {
-    title: (what) => `Your free AI ${what} for today are used up`,
-    body: "Pick a plan to keep getting fresh AI reports, churn tracking and Ask Raay answers for any app, every day.",
+    title: (what, n) => `You've used your ${n} free AI ${what}`,
+    body: "Pick Starter or Growth to keep getting fresh AI reports, churn tracking and Ask Raay answers for any app.",
   },
   quota: {
     title: (what) => `You've used this month's AI ${what} on your plan`,
@@ -58,7 +58,7 @@ export default function GateCard({
           {gate === "login" ? (
             <SignInButton mode="modal">
               <button type="button" className="h-10 px-5 rounded-lg bg-accent text-accent-ink text-sm font-medium">
-                Sign in to continue
+                Sign in free
               </button>
             </SignInButton>
           ) : (

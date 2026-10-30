@@ -1,11 +1,12 @@
 // Plan definitions shared by the server (limits) and the UI (pricing).
 export type PlanKey = "starter" | "growth";
 
+/** One-time free allowance per account. It never resets; after it, a paid plan is needed. */
 export const FREE_LIMITS = {
-  /** Fresh AI reports per day for visitors without a paid plan (cached reports are always free). */
-  report: Number(process.env.NEXT_PUBLIC_FREE_REPORTS_PER_DAY ?? 3),
-  /** Ask Raay questions per day for visitors without a paid plan. */
-  question: Number(process.env.NEXT_PUBLIC_FREE_QUESTIONS_PER_DAY ?? 5),
+  /** Fresh AI reports in total (cached reports are always free to view). */
+  report: Number(process.env.NEXT_PUBLIC_FREE_REPORTS ?? 3),
+  /** Ask Raay questions in total. */
+  question: Number(process.env.NEXT_PUBLIC_FREE_QUESTIONS ?? 5),
 };
 
 export const PLANS: Record<

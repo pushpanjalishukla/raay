@@ -18,6 +18,7 @@ export async function GET() {
       currentEnd: state.currentEnd,
       limits: plan ? PLANS[plan].limits : null,
       usage: plan ? await usageThisMonth(userId) : null,
+      freeUsed: plan ? null : state.freeUsed,
     },
     { headers: { "Cache-Control": "private, no-store" } },
   );

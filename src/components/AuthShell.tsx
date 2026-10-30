@@ -3,7 +3,7 @@ import { LogoTile } from "./Logo";
 import { FREE_LIMITS } from "@/lib/plans";
 
 const POINTS = [
-  `${FREE_LIMITS.report} fresh AI reports and ${FREE_LIMITS.question} Ask Raay questions every day, free`,
+  `${FREE_LIMITS.report} fresh AI reports and ${FREE_LIMITS.question} Ask Raay questions, free`,
   "Fix lists, churn alerts and reply drafts for any app",
   "Upgrade anytime from ₹2,999/month. No card needed to start",
 ];

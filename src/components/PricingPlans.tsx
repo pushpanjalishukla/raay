@@ -121,8 +121,8 @@ export default function PricingPlans() {
       per: "",
       tagline: "Try Raay on any app",
       features: [
-        `${FREE_LIMITS.report} fresh AI reports a day`,
-        `${FREE_LIMITS.question} Ask Raay questions a day`,
+        `${FREE_LIMITS.report} fresh AI reports, one-time`,
+        `${FREE_LIMITS.question} Ask Raay questions, one-time`,
         "Unlimited cached reports",
         "Full analytics dashboard",
       ],

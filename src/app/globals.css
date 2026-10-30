@@ -72,6 +72,18 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  /* Copies for Clerk's theme (src/lib/clerk-appearance.ts): Clerk sets its own --accent and friends
+     on its elements, so it reads these names. They resolve here, so they still follow dark mode. */
+  --raay-bg: var(--bg);
+  --raay-surface: var(--surface);
+  --raay-surface-2: var(--surface-2);
+  --raay-border: var(--border);
+  --raay-ink: var(--ink);
+  --raay-ink-2: var(--ink-2);
+  --raay-accent: var(--accent);
+  --raay-accent-ink: var(--accent-ink);
+  --raay-critical: var(--critical);
+  --raay-good: var(--good);
 }
 
 .tabular {

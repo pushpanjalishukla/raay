@@ -5,6 +5,7 @@ import Link from "next/link";
 import HeaderAuth from "@/components/HeaderAuth";
 import BrandLogo from "@/components/Logo";
 import { AUTH_ON } from "@/lib/client-flags";
+import { clerkAppearance } from "@/lib/clerk-appearance";
 import { BRAND } from "@/lib/config";
 import "./globals.css";
 
@@ -104,7 +105,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <ClerkProvider
             signInUrl="/sign-in"
             signUpUrl="/sign-up"
-            appearance={{ variables: { colorPrimary: "#e8590c", borderRadius: "0.75rem" } }}
+            appearance={clerkAppearance}
           >
             <Shell>{children}</Shell>
           </ClerkProvider>

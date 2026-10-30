@@ -18,14 +18,14 @@ export default function PrivacyPage() {
         <h2>1. What we process</h2>
         <ul>
           <li>
-            <strong>Your IP address, briefly.</strong> To enforce free daily limits we read your IP address on each request
+            <strong>Your IP address, briefly.</strong> To stop abuse of the free allowance we read your IP address on each request
             and immediately turn it into a one-way code using a secret that changes every day. We never store the IP itself;
             the coded counters expire within 2 days and can&apos;t be linked across days.
           </li>
           <li>
             <strong>Account details, if you sign in.</strong> Your name, email address and profile picture (for example from
-            Google) are stored by our sign-in provider, Clerk. On your account we store your plan, its status and its renewal
-            date.
+            Google) are stored by our sign-in provider, Clerk. On your account we store your plan, its status, its renewal
+            date and how much of the free allowance you have used.
           </li>
           <li>
             <strong>Payments, if you subscribe.</strong> Payments are handled entirely by Razorpay. We never see or store card
