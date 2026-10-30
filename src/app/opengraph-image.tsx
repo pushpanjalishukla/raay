@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { RAAY_ORANGE } from "@/components/Logo";
+import { RAAY_BUBBLE, RAAY_ORANGE } from "@/components/Logo";
 
 export const alt = "Raay: app review intelligence for Indian apps";
 export const size = { width: 1200, height: 630 };
@@ -27,8 +27,11 @@ export default function OgImage() {
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ display: "flex", fontSize: 52, fontWeight: 700, letterSpacing: -3 }}>
-          raay<span style={{ color: RAAY_ORANGE }}>.</span>
+        <div style={{ display: "flex", alignItems: "flex-end", fontSize: 52, fontWeight: 700, letterSpacing: -3 }}>
+          raay
+          <svg width="14" height="14" viewBox="10 9 44 44" style={{ marginLeft: 4, marginBottom: 12 }}>
+            <path d={RAAY_BUBBLE} fill={RAAY_ORANGE} />
+          </svg>
         </div>
         <div style={{ display: "flex", fontSize: 64, fontWeight: 700, lineHeight: 1.1, marginTop: 40, maxWidth: 1000 }}>
           Your users already told you what to fix.
