@@ -152,3 +152,12 @@ body {
     animation: none !important;
   }
 }
+
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.anim-grow-x { transform-origin: left; animation: grow-x 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .anim-grow-x { animation: none !important; }
+}

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import HeaderAuth from "@/components/HeaderAuth";
+import BrandLogo from "@/components/Logo";
 import { AUTH_ON } from "@/lib/client-flags";
 import { BRAND } from "@/lib/config";
 import "./globals.css";
@@ -27,9 +28,8 @@ export const metadata: Metadata = {
 
 function Logo() {
   return (
-    <Link href="/" className="flex items-center gap-2 font-semibold text-lg tracking-tight">
-      <span className="grid place-items-center w-7 h-7 rounded-lg bg-ink text-bg text-sm">र</span>
-      {BRAND.name}
+    <Link href="/" aria-label={`${BRAND.name} home`} className="shrink-0">
+      <BrandLogo />
     </Link>
   );
 }
@@ -44,7 +44,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             <Link href="/#features" className="hover:text-ink">Features</Link>
             <Link href="/#how" className="hover:text-ink">How it works</Link>
             <Link href="/pulse" className="hover:text-ink">App Pulse</Link>
-            <Link href="/compare" className="hover:text-ink">Compare apps</Link>
+            <Link href="/compare" className="hover:text-ink">Compare</Link>
             <Link href="/pricing" className="hover:text-ink">Pricing</Link>
           </div>
           <div className="ml-auto flex items-center gap-4">
@@ -101,7 +101,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         {AUTH_ON ? (
-          <ClerkProvider>
+          <ClerkProvider
+            signInUrl="/sign-in"
+            signUpUrl="/sign-up"
+            appearance={{ variables: { colorPrimary: "#e8590c", borderRadius: "0.75rem" } }}
+          >
             <Shell>{children}</Shell>
           </ClerkProvider>
         ) : (

@@ -14,7 +14,7 @@ export interface FeaturedSnapshot {
   generatedAt: string;
   total: number;
   kpis: { negative: number; recent: number; churn: number };
-  waterfall: { actual: number; potential: number; steps: { short: string; delta: number }[] };
+  waterfall: { actual: number; potential: number; steps: { short: string; label?: string; delta: number }[] };
   reviews: { lang: string; stars: number; text: string; gist: string; topic: string; positive: boolean }[];
   fix: { title: string; detail: string; action: string } | null;
   callouts: { spike: { title: string; sub: string } | null; churn: { title: string; sub: string } | null; reply: { title: string; sub: string } | null };
@@ -92,7 +92,7 @@ export function buildSnapshot(a: Analysis, name: string): FeaturedSnapshot {
       steps: wf.steps
         .filter((s) => s.category !== "other" && s.category !== "rest")
         .slice(0, 4)
-        .map((s) => ({ short: s.short, delta: s.delta })),
+        .map((s) => ({ short: s.short, label: s.label, delta: s.delta })),
     },
     reviews: pickReviews(a.reviews).map((r) => ({
       lang: LANG_LABEL[r.lang],
